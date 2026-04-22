@@ -17,6 +17,7 @@ class DatabaseSeeder extends Seeder
             SubBlokSeeder::class,
             ItpSeeder::class,
             MiniLngTemplateSeeder::class,
+            AssemblyCodeSeeder::class,
         ]);
     }
 }

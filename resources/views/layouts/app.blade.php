@@ -48,10 +48,89 @@
             background: linear-gradient(180deg, #0a0f1e 0%, #0f172a 40%, #131c33 100%);
             color: #fff;
             z-index: 1000;
-            transition: transform 0.35s cubic-bezier(0.4,0,0.2,1);
+            transition: width 0.35s cubic-bezier(0.4,0,0.2,1), transform 0.35s cubic-bezier(0.4,0,0.2,1);
             display: flex;
             flex-direction: column;
             border-right: 1px solid rgba(255,255,255,0.04);
+            overflow: hidden;
+        }
+
+        /* Collapsed state (desktop icon-only) */
+        .sidebar.collapsed {
+            width: 64px;
+        }
+        .sidebar-brand h4,
+        .sidebar-brand small,
+        .sidebar-nav a span,
+        .sidebar-nav .nav-label,
+        .sidebar-footer .btn-logout span {
+            transition: opacity 0.25s ease, max-width 0.25s ease;
+            opacity: 1;
+            max-width: 200px;
+            overflow: hidden;
+            white-space: nowrap;
+        }
+        .sidebar.collapsed .sidebar-brand h4,
+        .sidebar.collapsed .sidebar-brand small,
+        .sidebar.collapsed .sidebar-nav a span,
+        .sidebar.collapsed .sidebar-nav .nav-label,
+        .sidebar.collapsed .sidebar-footer .btn-logout span {
+            opacity: 0;
+            max-width: 0;
+            pointer-events: none;
+        }
+        .sidebar.collapsed .sidebar-brand {
+            padding: 1.25rem 0.5rem;
+        }
+        .sidebar.collapsed .sidebar-nav a {
+            justify-content: center;
+            padding: 0.7rem 0;
+            position: relative;
+        }
+        .sidebar.collapsed .sidebar-nav a i {
+            margin-right: 0;
+            font-size: 1.1rem;
+        }
+        /* Tooltip on hover for collapsed sidebar */
+        .sidebar.collapsed .sidebar-nav a[title]:hover::after {
+            content: attr(title);
+            position: absolute;
+            left: 100%;
+            top: 50%;
+            transform: translateY(-50%);
+            margin-left: 8px;
+            background: #1e293b;
+            color: #fff;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            white-space: nowrap;
+            z-index: 2000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            pointer-events: none;
+        }
+        .sidebar.collapsed .sidebar-footer .btn-logout {
+            padding: 0.6rem;
+            justify-content: center;
+        }
+        .sidebar.collapsed + .sidebar-overlay + .main-content,
+        .sidebar.collapsed + .main-content {
+            margin-left: 64px;
+        }
+
+        /* Mobile sidebar overlay */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(15,23,42,0.5);
+            backdrop-filter: blur(2px);
+            z-index: 999;
+            transition: opacity 0.3s ease;
+        }
+        .sidebar-overlay.active {
+            display: block;
         }
 
         .sidebar-brand {
@@ -348,6 +427,7 @@
             .sidebar { transform: translateX(-100%); }
             .sidebar.open { transform: translateX(0); }
             .main-content { margin-left: 0; }
+            .sidebar.collapsed + .sidebar-overlay + .main-content { margin-left: 0; }
         }
 
         /* ===== ANIMATIONS ===== */
@@ -387,47 +467,58 @@
 
         <nav class="sidebar-nav">
             @if($user->role === 'admin')
-                <div class="nav-label">Management</div>
-                <a href="/admin/dashboard" class="{{ request()->is('admin/dashboard') ? 'active' : '' }}">
-                    <i class="fas fa-chart-pie"></i> Dashboard
+                <div class="nav-label"><span>Management</span></div>
+                <a href="/admin/dashboard" title="Dashboard" class="{{ request()->is('admin/dashboard') ? 'active' : '' }}">
+                    <i class="fas fa-chart-pie"></i> <span>Dashboard</span>
                 </a>
-                <a href="/admin/users/create" class="{{ request()->is('admin/users*') ? 'active' : '' }}">
-                    <i class="fas fa-user-plus"></i> Buat Akun
+                <a href="/admin/users/create" title="Buat Akun" class="{{ request()->is('admin/users*') ? 'active' : '' }}">
+                    <i class="fas fa-user-plus"></i> <span>Buat Akun</span>
                 </a>
-                <a href="/admin/projects/create" class="{{ request()->is('admin/projects/create') ? 'active' : '' }}">
-                    <i class="fas fa-rocket"></i> Start Project
+                <a href="/admin/projects/create" title="Start Project" class="{{ request()->is('admin/projects/create') ? 'active' : '' }}">
+                    <i class="fas fa-rocket"></i> <span>Start Project</span>
                 </a>
             @else
-                <div class="nav-label">Navigasi</div>
-                <a href="/dashboard" class="{{ request()->is('dashboard') ? 'active' : '' }}">
-                    <i class="fas fa-th-large"></i> Pilih Project
+                <div class="nav-label"><span>Navigasi</span></div>
+                <a href="/dashboard" title="Pilih Project" class="{{ request()->is('dashboard') ? 'active' : '' }}">
+                    <i class="fas fa-th-large"></i> <span>Pilih Project</span>
                 </a>
             @endif
 
-            <div class="nav-label">Komunikasi</div>
-            <a href="/messages" class="{{ request()->is('messages*') ? 'active' : '' }}" style="position:relative">
-                <i class="fas fa-comments"></i> Pesan
-                <span id="msgBadge" style="display:none;position:absolute;right:12px;top:50%;transform:translateY(-50%);background:#ef4444;color:#fff;font-size:0.5rem;font-weight:700;width:18px;height:18px;border-radius:50%;display:none;align-items:center;justify-content:center"></span>
+            <div class="nav-label"><span>Komunikasi</span></div>
+            <a href="/notifications" title="Notifikasi" class="{{ request()->is('notifications*') ? 'active' : '' }}" style="position:relative">
+                <i class="fas fa-bell"></i> <span>Notifikasi</span>
+                <span id="notifSidebarBadge" style="display:none;position:absolute;right:12px;top:50%;transform:translateY(-50%);background:#ef4444;color:#fff;font-size:0.5rem;font-weight:700;width:18px;height:18px;border-radius:50%;align-items:center;justify-content:center"></span>
+            </a>
+            <a href="/messages" title="Pesan" class="{{ request()->is('messages*') ? 'active' : '' }}" style="position:relative">
+                <i class="fas fa-comments"></i> <span>Pesan</span>
+                <span id="msgBadge" style="display:none;position:absolute;right:12px;top:50%;transform:translateY(-50%);background:#ef4444;color:#fff;font-size:0.5rem;font-weight:700;width:18px;height:18px;border-radius:50%;align-items:center;justify-content:center"></span>
             </a>
         </nav>
 
         <div class="sidebar-footer">
-            <a href="/logout" class="btn-logout">
-                <i class="fas fa-sign-out-alt"></i>Logout
+            <a href="/logout" title="Logout" class="btn-logout">
+                <i class="fas fa-sign-out-alt"></i><span>Logout</span>
             </a>
         </div>
     </div>
+
+    <!-- SIDEBAR OVERLAY (mobile) -->
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
 
     <!-- MAIN -->
     <div class="main-content">
         <div class="topbar">
             <div class="d-flex align-items-center gap-3">
-                <button class="btn btn-link d-lg-none text-dark p-0" onclick="document.getElementById('sidebar').classList.toggle('open')">
+                <button class="btn btn-link text-dark p-0" id="sidebarToggleBtn" onclick="toggleSidebar()">
                     <i class="fas fa-bars"></i>
                 </button>
                 <span class="topbar-title">@yield('page-title', 'Dashboard')</span>
             </div>
             <div class="user-info">
+                <a href="/notifications" class="position-relative me-2" style="color:var(--text-muted);font-size:1.1rem" title="Notifikasi">
+                    <i class="fas fa-bell"></i>
+                    <span id="notifTopBadge" style="display:none;position:absolute;top:-4px;right:-6px;background:#ef4444;color:#fff;font-size:0.5rem;font-weight:700;min-width:16px;height:16px;border-radius:50%;align-items:center;justify-content:center;padding:0 3px"></span>
+                </a>
                 <div class="text-end d-none d-sm-block">
                     <div class="fw-bold" style="font-size:0.85rem">{{ $user->name }}</div>
                     <span class="role-badge role-{{ $user->role }}">{{ strtoupper($user->role) }}</span>
@@ -459,10 +550,21 @@
         <div id="msgToast" class="toast align-items-center text-bg-primary border-0" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="5000">
             <div class="d-flex">
                 <div class="toast-body" style="font-size:0.85rem">
-                    <strong><i class="fas fa-bell me-2"></i>Pesan Baru</strong><br>
+                    <strong><i class="fas fa-comments me-2"></i>Pesan Baru</strong><br>
                     <span id="msgToastSender" class="fw-bold d-block mt-1"></span>
                     <span id="msgToastText" class="text-truncate d-block" style="max-width:200px"></span>
                     <a href="/messages" class="btn btn-sm btn-light mt-2 py-1 px-3 text-primary fw-bold" style="font-size:0.75rem">Lihat</a>
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        </div>
+        <!-- Notification Toast -->
+        <div id="notifToast" class="toast align-items-center border-0" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="6000" style="background:linear-gradient(135deg,#1e293b,#334155);color:#fff">
+            <div class="d-flex">
+                <div class="toast-body" style="font-size:0.85rem">
+                    <strong><i class="fas fa-bell me-2" id="notifToastIcon"></i><span id="notifToastTitle">Notifikasi Baru</span></strong><br>
+                    <span id="notifToastMsg" class="d-block mt-1" style="max-width:250px;font-size:0.8rem;color:#cbd5e1"></span>
+                    <a href="/notifications" class="btn btn-sm mt-2 py-1 px-3 fw-bold" style="font-size:0.75rem;background:rgba(59,130,246,0.2);color:#93c5fd;border:1px solid rgba(59,130,246,0.3);border-radius:0.5rem">Lihat Semua</a>
                 </div>
                 <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
             </div>
@@ -508,14 +610,89 @@
                 .catch(err => console.error('Poll error', err));
         }
 
+        // === Notification Polling ===
+        const notifTopBadge = document.getElementById('notifTopBadge');
+        const notifSidebarBadge = document.getElementById('notifSidebarBadge');
+        const notifToastEl = document.getElementById('notifToast');
+        const notifToast = new bootstrap.Toast(notifToastEl);
+        const notifStorageKey = 'last_notif_id_user_' + {{ session('user') ? session('user')->id : 0 }};
+        let globalLastNotifId = parseInt(localStorage.getItem(notifStorageKey) || '0');
+
+        function checkNotifications() {
+            fetch('/notifications/unread-count')
+                .then(r => r.json())
+                .then(res => {
+                    if (res.count > 0) {
+                        const label = res.count > 99 ? '99+' : res.count;
+                        if (notifTopBadge) { notifTopBadge.style.display = 'flex'; notifTopBadge.innerText = label; }
+                        if (notifSidebarBadge) { notifSidebarBadge.style.display = 'flex'; notifSidebarBadge.innerText = label; }
+                    } else {
+                        if (notifTopBadge) notifTopBadge.style.display = 'none';
+                        if (notifSidebarBadge) notifSidebarBadge.style.display = 'none';
+                    }
+
+                    // Show toast for new notifications
+                    if (res.latest_id > 0 && res.latest_id > globalLastNotifId && res.latest) {
+                        const typeIcons = {
+                            submit: 'fa-file-upload',
+                            approved: 'fa-check-circle',
+                            needs_revision: 'fa-times-circle',
+                            rejected: 'fa-times-circle'
+                        };
+                        const iconEl = document.getElementById('notifToastIcon');
+                        iconEl.className = 'fas ' + (typeIcons[res.latest.type] || 'fa-bell') + ' me-2';
+                        document.getElementById('notifToastTitle').innerText = res.latest.title || 'Notifikasi Baru';
+                        document.getElementById('notifToastMsg').innerText = res.latest.message || '';
+                        notifToast.show();
+
+                        globalLastNotifId = res.latest_id;
+                        localStorage.setItem(notifStorageKey, res.latest_id);
+                    }
+                })
+                .catch(() => {});
+        }
+
         // Only poll if user is logged in
         @if(session()->has('user'))
-            setInterval(checkNewMessages, 5000); // Check every 5 seconds
-            // Initial check
+            setInterval(checkNewMessages, 5000);
+            setInterval(checkNotifications, 6000);
             setTimeout(checkNewMessages, 1000);
+            setTimeout(checkNotifications, 1500);
         @endif
     </script>
     
     @yield('scripts')
+
+    <script>
+        // Sidebar collapse toggle
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            const isMobile = window.innerWidth <= 992;
+            if (isMobile) {
+                const isOpen = sidebar.classList.toggle('open');
+                if (overlay) overlay.classList.toggle('active', isOpen);
+            } else {
+                sidebar.classList.toggle('collapsed');
+                localStorage.setItem('sidebar_collapsed', sidebar.classList.contains('collapsed') ? '1' : '0');
+            }
+        }
+
+        // Close sidebar (called by overlay click)
+        function closeSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            sidebar.classList.remove('open');
+            if (overlay) overlay.classList.remove('active');
+        }
+
+        // Restore sidebar state on page load
+        (function() {
+            const collapsed = localStorage.getItem('sidebar_collapsed');
+            if (collapsed === '1' && window.innerWidth > 992) {
+                document.getElementById('sidebar').classList.add('collapsed');
+            }
+        })();
+    </script>
 </body>
 </html>

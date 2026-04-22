@@ -12,6 +12,7 @@ use App\Models\Blok;
 use App\Models\SubBlok;
 use App\Models\Itp;
 use App\Models\User;
+use App\Models\AssemblyCode;
 use App\Services\ProjectTemplateService;
 
 class AdminController extends Controller
@@ -193,7 +194,13 @@ class AdminController extends Controller
         $moduls = Modul::where('project_id', $id)->with('bloks.subBloks.itps')->get();
         $allUsers = User::where('role', '!=', 'admin')->get();
 
-        return view('admin.manage-project', compact('project', 'moduls', 'allUsers'));
+        try {
+            $assemblyCodes = AssemblyCode::orderBy('code')->get();
+        } catch (\Illuminate\Database\QueryException $e) {
+            $assemblyCodes = collect();
+        }
+
+        return view('admin.manage-project', compact('project', 'moduls', 'allUsers', 'assemblyCodes'));
     }
 
     public function storeModul(Request $request)
@@ -274,5 +281,21 @@ class AdminController extends Controller
     {
         Itp::findOrFail($id)->delete();
         return back()->with('success', 'Kode Inspeksi berhasil dihapus!');
+    }
+
+    /**
+     * Update module schedule (start_day, duration_days) — FEAT-07
+     */
+    public function updateModulSchedule(Request $request, $id)
+    {
+        $request->validate([
+            'start_day' => 'nullable|integer|min:1',
+            'duration_days' => 'nullable|integer|min:1',
+        ]);
+
+        $modul = Modul::findOrFail($id);
+        $modul->update($request->only('start_day', 'duration_days'));
+
+        return back()->with('success', 'Jadwal modul berhasil diperbarui!');
     }
 }

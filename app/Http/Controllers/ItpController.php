@@ -11,6 +11,7 @@ use App\Models\SubBlok;
 use App\Models\Itp;
 use App\Models\ItpData;
 use App\Models\User;
+use App\Services\NotificationService;
 
 class ItpController extends Controller
 {
@@ -111,7 +112,35 @@ class ItpController extends Controller
             ];
         }
 
-        return view('modul', compact('modul', 'project', 'modulProgress'));
+        // Calculate module lock status and "Hari ke-N"
+        $projectStart = $project->tanggal_mulai ? \Carbon\Carbon::parse($project->tanggal_mulai) : null;
+        $dayN = $projectStart ? (int) $projectStart->diffInDays(now()) + 1 : null;
+
+        $modulLock = [];
+        foreach ($modul as $m) {
+            $startDay = $m->start_day ?? null;
+            $durationDays = $m->duration_days ?? null;
+
+            if ($projectStart && $startDay) {
+                $unlockDate = $projectStart->copy()->addDays($startDay - 1);
+                $isLocked = now()->lt($unlockDate);
+                $modulLock[$m->id] = [
+                    'locked' => $isLocked,
+                    'unlock_date' => $unlockDate->format('d M Y'),
+                    'start_day' => $startDay,
+                    'duration_days' => $durationDays,
+                ];
+            } else {
+                $modulLock[$m->id] = [
+                    'locked' => false,
+                    'unlock_date' => null,
+                    'start_day' => $startDay,
+                    'duration_days' => $durationDays,
+                ];
+            }
+        }
+
+        return view('modul', compact('modul', 'project', 'modulProgress', 'modulLock', 'dayN'));
     }
 
     /**
@@ -223,19 +252,34 @@ class ItpController extends Controller
 
         $myData = $itp->itpData->where('uploaded_by', $user->id)->first();
 
-        $allData = $itp->itpData->map(function ($d) {
+        // Determine which role this user can ACC/reject (one level below)
+        $canAccRole = self::ROLE_HIERARCHY[$role] ?? null;
+
+        $allData = $itp->itpData->map(function ($d) use ($canAccRole, $role) {
+            $uploaderRole = $d->uploader->role ?? '-';
             return [
                 'id' => $d->id,
                 'photo' => $d->photo,
                 'keterangan' => $d->keterangan,
                 'status' => $d->status,
-                'role' => $d->uploader->role ?? '-',
+                'role' => $uploaderRole,
                 'name' => $d->uploader->name ?? '-',
                 'approved_at' => $d->approved_at,
                 'rejection_note' => $d->rejection_note,
                 'updated_at' => $d->updated_at,
+                'can_acc' => $canAccRole === $uploaderRole && $d->status === 'done',
+                'can_reject' => $canAccRole === $uploaderRole && $d->status === 'done',
             ];
         })->values();
+
+        // Visibility: which roles' data can this user see
+        $visibleRoles = match ($role) {
+            'os'    => ['yard', 'os'],
+            'class' => ['yard', 'os', 'class'],
+            'stat'  => ['yard', 'os', 'class', 'stat'],
+            'yard'  => ['yard'],
+            default => ['yard', 'os', 'class', 'stat'],
+        };
 
         return response()->json([
             'itp' => $itp,
@@ -245,6 +289,8 @@ class ItpController extends Controller
             'can_submit' => $canSubmit,
             'photo_required' => $canSubmit ? $itp->isPhotoRequired($role) : false,
             'val' => $val,
+            'can_acc_role' => $canAccRole,
+            'visible_roles' => $visibleRoles,
             'all_vals' => [
                 'yard' => $itp->yard_val,
                 'class' => $itp->class_val,
@@ -282,9 +328,16 @@ class ItpController extends Controller
         $existing = ItpData::where('itp_id', $request->itp_id)->where('uploaded_by', $user->id)->first();
 
         if ($existing) {
-            $updateData = ['keterangan' => $request->keterangan, 'status' => 'done'];
+            $updateData = [
+                'keterangan' => $request->keterangan,
+                'status' => 'done',
+                'rejection_note' => null, // Clear rejection note on resubmit
+            ];
             if ($photoPath) { $updateData['photo'] = $photoPath; }
             $existing->update($updateData);
+
+            $isResubmit = in_array($existing->getOriginal('status'), ['needs_revision', 'rejected']);
+            $msg = $isResubmit ? 'Data ITP berhasil di-resubmit!' : 'Data ITP berhasil diperbarui!';
         } else {
             ItpData::create([
                 'itp_id' => $request->itp_id,
@@ -293,21 +346,51 @@ class ItpController extends Controller
                 'keterangan' => $request->keterangan,
                 'status' => 'done',
             ]);
+            $msg = 'Data ITP berhasil disimpan!';
         }
 
-        return response()->json(['success' => true, 'message' => 'Data ITP berhasil disimpan!']);
+        // Send notification to role above
+        try {
+            $userModel = User::find($user->id);
+            $notifService = new NotificationService();
+            $notifService->notifySubmit($itp, $userModel);
+        } catch (\Throwable $e) {
+            // Don't fail the submission if notification fails
+        }
+
+        return response()->json(['success' => true, 'message' => $msg]);
     }
 
     /**
-     * ACC (approve) ITP data
+     * Role hierarchy: key can ACC/reject the value role (one level below only)
+     */
+    private const ROLE_HIERARCHY = [
+        'os'    => 'yard',
+        'class' => 'os',
+        'stat'  => 'class',
+    ];
+
+    /**
+     * ACC (approve) ITP data — strict hierarchy enforcement
      */
     public function approveItpData($id)
     {
-        $data = ItpData::findOrFail($id);
+        $data = ItpData::with('uploader')->findOrFail($id);
         $user = session('user');
+        $myRole = $user->role;
 
-        if ($data->uploaded_by !== $user->id) {
-            return response()->json(['success' => false, 'message' => 'Anda hanya bisa ACC data milik Anda sendiri.'], 403);
+        // Check hierarchy: current user's role must be exactly one level above uploader's role
+        if (!isset(self::ROLE_HIERARCHY[$myRole])) {
+            return response()->json(['success' => false, 'message' => 'Role Anda tidak memiliki kewenangan ACC.'], 403);
+        }
+
+        $uploaderRole = $data->uploader->role ?? null;
+        if ($uploaderRole !== self::ROLE_HIERARCHY[$myRole]) {
+            $expected = self::ROLE_HIERARCHY[$myRole];
+            return response()->json([
+                'success' => false,
+                'message' => "Anda (role {$myRole}) hanya bisa ACC data milik role {$expected}."
+            ], 403);
         }
 
         $data->update([
@@ -315,21 +398,58 @@ class ItpController extends Controller
             'approved_at' => now(),
         ]);
 
+        // Send notifications
+        try {
+            $itp = Itp::find($data->itp_id);
+            $approver = User::find($user->id);
+            $dataOwner = $data->uploader;
+            $notifService = new NotificationService();
+            $notifService->notifyApproved($itp, $approver, $dataOwner);
+        } catch (\Throwable $e) {}
+
         return response()->json(['success' => true, 'message' => 'Data ITP berhasil di-ACC!']);
     }
 
     /**
-     * Reject ITP data (revert to done for re-review)
+     * Reject ITP data — hierarchy enforced, note is mandatory
      */
     public function rejectItpData(Request $request, $id)
     {
-        $data = ItpData::findOrFail($id);
+        $request->validate(['note' => 'required|string|min:3']);
+
+        $data = ItpData::with('uploader')->findOrFail($id);
+        $user = session('user');
+        $myRole = $user->role;
+
+        // Same hierarchy check as approve
+        if (!isset(self::ROLE_HIERARCHY[$myRole])) {
+            return response()->json(['success' => false, 'message' => 'Role Anda tidak memiliki kewenangan reject.'], 403);
+        }
+
+        $uploaderRole = $data->uploader->role ?? null;
+        if ($uploaderRole !== self::ROLE_HIERARCHY[$myRole]) {
+            $expected = self::ROLE_HIERARCHY[$myRole];
+            return response()->json([
+                'success' => false,
+                'message' => "Anda (role {$myRole}) hanya bisa reject data milik role {$expected}."
+            ], 403);
+        }
 
         $data->update([
-            'status' => 'rejected',
+            'status' => 'needs_revision',
             'rejection_note' => $request->note,
+            'approved_at' => null,
         ]);
 
-        return response()->json(['success' => true, 'message' => 'Data ITP ditolak.']);
+        // Send rejection notification
+        try {
+            $itp = Itp::find($data->itp_id);
+            $rejector = User::find($user->id);
+            $dataOwner = $data->uploader;
+            $notifService = new NotificationService();
+            $notifService->notifyRejected($itp, $rejector, $dataOwner, $request->note);
+        } catch (\Throwable $e) {}
+
+        return response()->json(['success' => true, 'message' => 'Data ITP ditolak dan dikembalikan untuk revisi.']);
     }
 }

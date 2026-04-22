@@ -138,11 +138,17 @@
                             </div>
                             <div class="col-4">
                                 <label class="form-label fw-bold" style="font-size:0.85rem">Tanggal Mulai</label>
-                                <input type="date" name="tanggal_mulai" class="form-control" value="{{ old('tanggal_mulai') }}">
+                                <input type="date" name="tanggal_mulai" id="tanggal_mulai" class="form-control" value="{{ old('tanggal_mulai') }}">
                             </div>
                             <div class="col-4">
                                 <label class="form-label fw-bold" style="font-size:0.85rem">Deadline <span class="text-danger">*</span></label>
-                                <input type="date" name="deadline" class="form-control" value="{{ old('deadline') }}">
+                                <input type="date" name="deadline" id="deadline" class="form-control" value="{{ old('deadline') }}">
+                            </div>
+                        </div>
+                        <div id="deadline-warning" class="mb-3" style="display:none">
+                            <div style="background:#fef3c7;border:1px solid #fbbf24;border-radius:0.5rem;padding:0.6rem 1rem;font-size:0.8rem;color:#92400e">
+                                <i class="fas fa-exclamation-triangle me-1"></i>
+                                <span id="deadline-warning-text"></span>
                             </div>
                         </div>
                         <div class="mb-4">
@@ -163,8 +169,11 @@
 @section('scripts')
 <script>
     const templateDescriptions = @json($templates->pluck('description', 'id'));
+    const templateDurations = @json($templates->pluck('standard_duration', 'id'));
+    let currentMode = 'template';
 
     function setMode(mode) {
+        currentMode = mode;
         const templateSection = document.getElementById('template-section');
         const templateInput = document.getElementById('template_id');
         const modeTemplate = document.getElementById('mode-template');
@@ -182,6 +191,7 @@
             templateSection.classList.add('hidden');
             templateInput.value = '';
             document.getElementById('template-info').style.display = 'none';
+            document.getElementById('deadline-warning').style.display = 'none';
             submitBtn.innerHTML = '<i class="fas fa-rocket me-2"></i>Start Project (Manual)';
         }
     }
@@ -195,7 +205,65 @@
         } else {
             info.style.display = 'none';
         }
+        // Auto-compute deadline if tanggal_mulai is set
+        autoComputeDeadline();
     });
+
+    // Auto-deadline computation
+    const tanggalMulaiInput = document.getElementById('tanggal_mulai');
+    const deadlineInput = document.getElementById('deadline');
+
+    function autoComputeDeadline() {
+        const templateId = document.getElementById('template_id').value;
+        const startDate = tanggalMulaiInput.value;
+
+        if (currentMode !== 'template' || !templateId || !startDate) {
+            document.getElementById('deadline-warning').style.display = 'none';
+            return;
+        }
+
+        const duration = templateDurations[templateId];
+        if (!duration) return;
+
+        // Auto-fill deadline if empty
+        if (!deadlineInput.value) {
+            const start = new Date(startDate);
+            start.setDate(start.getDate() + parseInt(duration));
+            deadlineInput.value = start.toISOString().split('T')[0];
+        }
+
+        checkDeadlineWarning();
+    }
+
+    function checkDeadlineWarning() {
+        const templateId = document.getElementById('template_id').value;
+        const startDate = tanggalMulaiInput.value;
+        const deadlineDate = deadlineInput.value;
+        const warningEl = document.getElementById('deadline-warning');
+        const warningText = document.getElementById('deadline-warning-text');
+
+        if (currentMode !== 'template' || !templateId || !startDate || !deadlineDate) {
+            warningEl.style.display = 'none';
+            return;
+        }
+
+        const duration = templateDurations[templateId];
+        if (!duration) { warningEl.style.display = 'none'; return; }
+
+        const start = new Date(startDate);
+        const deadline = new Date(deadlineDate);
+        const diffDays = Math.floor((deadline - start) / (1000 * 60 * 60 * 24));
+
+        if (diffDays < parseInt(duration)) {
+            warningText.textContent = `Durasi ini (${diffDays} hari) lebih pendek dari standar (${duration} hari). Tidak disarankan.`;
+            warningEl.style.display = 'block';
+        } else {
+            warningEl.style.display = 'none';
+        }
+    }
+
+    tanggalMulaiInput.addEventListener('change', autoComputeDeadline);
+    deadlineInput.addEventListener('change', checkDeadlineWarning);
 
     // Initialize: trigger change if template was pre-selected (old value)
     document.addEventListener('DOMContentLoaded', function() {

@@ -5,6 +5,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ItpController;
 use App\Http\Controllers\MessageController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Middleware\AuthMiddleware;
 use App\Http\Middleware\AdminMiddleware;
 
@@ -13,6 +14,12 @@ Route::post('/login', [AuthController::class, 'login']);
 
 Route::middleware(AuthMiddleware::class)->group(function () {
     Route::get('/logout', [AuthController::class, 'logout']);
+
+    // === NOTIFICATIONS ===
+    Route::get('/notifications', [NotificationController::class, 'index']);
+    Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount']);
+    Route::post('/notifications/{id}/mark-read', [NotificationController::class, 'markRead']);
+    Route::post('/notifications/mark-all-read', [NotificationController::class, 'markAllRead']);
 
     // === ADMIN ===
     Route::middleware(AdminMiddleware::class)->prefix('admin')->group(function () {
@@ -34,6 +41,7 @@ Route::middleware(AuthMiddleware::class)->group(function () {
         Route::delete('/bloks/{id}', [AdminController::class, 'deleteBlok']);
         Route::delete('/sub-bloks/{id}', [AdminController::class, 'deleteSubBlok']);
         Route::delete('/itps/{id}', [AdminController::class, 'deleteItp']);
+        Route::post('/moduls/{id}/schedule', [AdminController::class, 'updateModulSchedule']);
     });
 
     // === NON-ADMIN ===

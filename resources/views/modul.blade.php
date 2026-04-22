@@ -23,7 +23,18 @@
     }
     .page-header-card h4 { font-weight: 800; margin-bottom: 4px; position: relative; }
     .page-header-card p { color: #94a3b8; font-size: 0.85rem; margin: 0; position: relative; }
-
+    .day-counter {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(59,130,246,0.15);
+        border: 1px solid rgba(59,130,246,0.3);
+        padding: 4px 12px;
+        border-radius: 2rem;
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: #93c5fd;
+    }
     .card-modul {
         background: var(--card);
         border: 1px solid var(--border);
@@ -42,6 +53,16 @@
         box-shadow: 0 15px 35px -8px rgba(0,0,0,0.1);
         border-color: var(--accent);
     }
+    .card-modul.locked {
+        opacity: 0.65;
+        pointer-events: none;
+        filter: grayscale(0.3);
+    }
+    .card-modul.locked:hover {
+        transform: none;
+        box-shadow: none;
+        border-color: var(--border);
+    }
     .card-modul-body {
         padding: 1.5rem;
         flex: 1;
@@ -59,11 +80,13 @@
         transition: all 0.3s;
     }
     .modul-icon i { font-size: 1.15rem; color: var(--accent); }
-    .card-modul:hover .modul-icon {
+    .card-modul:not(.locked):hover .modul-icon {
         background: var(--accent);
         transform: scale(1.1);
     }
-    .card-modul:hover .modul-icon i { color: #fff; }
+    .card-modul:not(.locked):hover .modul-icon i { color: #fff; }
+    .modul-icon.locked-icon { background: #fef3c7; }
+    .modul-icon.locked-icon i { color: #92400e; }
     .modul-number {
         font-size: 0.55rem;
         font-weight: 700;
@@ -81,6 +104,23 @@
         padding: 0.875rem 1.5rem;
         border-top: 1px solid var(--border);
         background: #fafbfc;
+    }
+    .lock-label {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.7rem;
+        color: #92400e;
+        font-weight: 600;
+        background: #fef3c7;
+        padding: 4px 10px;
+        border-radius: 0.5rem;
+    }
+    .schedule-badge {
+        font-size: 0.6rem;
+        font-weight: 600;
+        color: var(--text-muted);
+        margin-top: 4px;
     }
 </style>
 @endsection
@@ -108,6 +148,11 @@
                     @endif
                 @endif
                 </p>
+                @if($dayN)
+                    <div class="mt-2">
+                        <span class="day-counter"><i class="fas fa-calendar-day"></i> Hari ke-{{ $dayN }}</span>
+                    </div>
+                @endif
             </div>
             <a href="/dashboard" class="btn-back" style="color:#cbd5e1;border-color:rgba(255,255,255,0.15)"><i class="fas fa-arrow-left"></i> Kembali</a>
         </div>
@@ -115,15 +160,35 @@
 
     <div class="row g-4" id="modul-grid">
         @forelse($modul as $m)
-        @php $mp = $modulProgress[$m->id] ?? ['total' => 0, 'done' => 0, 'percent' => 0]; @endphp
+        @php
+            $mp = $modulProgress[$m->id] ?? ['total' => 0, 'done' => 0, 'percent' => 0];
+            $lock = $modulLock[$m->id] ?? ['locked' => false, 'unlock_date' => null];
+            $isLocked = $lock['locked'];
+        @endphp
         <div class="col-6 col-md-4 col-lg-3 modul-item">
+            @if($isLocked)
+            <div class="card-modul locked">
+            @else
             <a href="/blok/{{ $m->id }}" class="card-modul">
+            @endif
                 <div class="card-modul-body">
-                    <div class="modul-icon"><i class="fas fa-box-archive"></i></div>
+                    <div class="modul-icon {{ $isLocked ? 'locked-icon' : '' }}">
+                        <i class="fas {{ $isLocked ? 'fa-lock' : 'fa-box-archive' }}"></i>
+                    </div>
                     <div class="modul-number">Modul {{ $loop->iteration }}</div>
                     <div class="modul-name">{{ $m->nama_modul }}</div>
-                    @if($m->deskripsi)
+                    @if($isLocked)
+                        <div class="lock-label">
+                            <i class="fas fa-lock"></i> Tersedia mulai {{ $lock['unlock_date'] }}
+                        </div>
+                    @elseif($m->deskripsi)
                         <p class="text-muted mb-0" style="font-size:0.75rem; flex:1">{{ Str::limit($m->deskripsi, 60) }}</p>
+                    @endif
+                    @if($lock['start_day'])
+                        <div class="schedule-badge">
+                            <i class="fas fa-calendar-alt me-1"></i>Hari {{ $lock['start_day'] }} — {{ $lock['start_day'] + ($lock['duration_days'] ?? 0) - 1 }}
+                            ({{ $lock['duration_days'] ?? '?' }} hari)
+                        </div>
                     @endif
                 </div>
                 <div class="card-modul-footer">
@@ -135,7 +200,11 @@
                         <div class="fill {{ $mp['percent'] == 100 ? 'bg-success' : 'bg-primary' }}" style="width:{{ $mp['percent'] }}%"></div>
                     </div>
                 </div>
+            @if($isLocked)
+            </div>
+            @else
             </a>
+            @endif
         </div>
         @empty
         <div class="col-12 text-center py-5">

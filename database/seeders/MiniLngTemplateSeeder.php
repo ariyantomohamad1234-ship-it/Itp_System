@@ -13,33 +13,36 @@ class MiniLngTemplateSeeder extends Seeder
         // 1. CREATE TEMPLATE
         // ====================================================================
         $templateId = DB::table('project_templates')->insertGetId([
-            'name'        => 'Mini LNG 36 TEU',
-            'slug'        => 'mini-lng-36-teu',
-            'description' => 'Template bawaan untuk Inspection and Test Plan kapal Mini LNG 36 TEU. Mencakup 6 modul, 10 blok, 46 sub-blok, dan seluruh kode inspeksi hull construction.',
-            'is_active'   => true,
-            'created_at'  => now(),
-            'updated_at'  => now(),
+            'name'              => 'Mini LNG 36 TEU',
+            'slug'              => 'mini-lng-36-teu',
+            'description'       => 'Template bawaan untuk Inspection and Test Plan kapal Mini LNG 36 TEU. Mencakup 6 modul, 10 blok, 46 sub-blok, dan seluruh kode inspeksi hull construction.',
+            'standard_duration' => 148,
+            'is_active'         => true,
+            'created_at'        => now(),
+            'updated_at'        => now(),
         ]);
 
         // ====================================================================
         // 2. CREATE MODULES (6 modules)
         // ====================================================================
         $modulData = [
-            ['nama' => 'LNG-M1', 'desc' => 'Modular 1'],
-            ['nama' => 'LNG-M2', 'desc' => 'Modular 2'],
-            ['nama' => 'LNG-M3', 'desc' => 'Modular 3'],
-            ['nama' => 'LNG-M4', 'desc' => 'Modular 4'],
-            ['nama' => 'LNG-M5', 'desc' => 'Modular 5'],
-            ['nama' => 'LNG-M6', 'desc' => 'Modular 6'],
+            ['nama' => 'LNG-M1', 'desc' => 'Modular 1', 'start_day' => 36,  'duration' => 56],
+            ['nama' => 'LNG-M2', 'desc' => 'Modular 2', 'start_day' => 1,   'duration' => 35],
+            ['nama' => 'LNG-M3', 'desc' => 'Modular 3', 'start_day' => 36,  'duration' => 42],
+            ['nama' => 'LNG-M4', 'desc' => 'Modular 4', 'start_day' => 78,  'duration' => 42],
+            ['nama' => 'LNG-M5', 'desc' => 'Modular 5', 'start_day' => 120, 'duration' => 28],
+            ['nama' => 'LNG-M6', 'desc' => 'Modular 6', 'start_day' => 92,  'duration' => 50],
         ];
 
-        $modulIds = []; // index 0-5 → new DB IDs
+        $modulIds = [];
         foreach ($modulData as $i => $m) {
             $modulIds[$i] = DB::table('template_moduls')->insertGetId([
                 'project_template_id' => $templateId,
                 'nama_modul'          => $m['nama'],
                 'deskripsi'           => $m['desc'],
                 'sort_order'          => $i + 1,
+                'start_day'           => $m['start_day'],
+                'duration_days'       => $m['duration'],
                 'created_at'          => now(),
                 'updated_at'          => now(),
             ]);

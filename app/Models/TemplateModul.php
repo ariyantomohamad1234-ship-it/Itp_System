@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class TemplateModul extends Model
 {
-    protected $fillable = ['project_template_id', 'nama_modul', 'deskripsi', 'sort_order'];
+    protected $fillable = ['project_template_id', 'nama_modul', 'deskripsi', 'sort_order', 'start_day', 'duration_days'];
 
     public function template()
     {

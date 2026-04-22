@@ -41,9 +41,11 @@ class ProjectTemplateService
             // 3. Clone modules → blocks → sub-blocks → ITPs
             foreach ($template->templateModuls as $tModul) {
                 $modul = Modul::create([
-                    'project_id'  => $project->id,
-                    'nama_modul'  => $tModul->nama_modul,
-                    'deskripsi'   => $tModul->deskripsi,
+                    'project_id'    => $project->id,
+                    'nama_modul'    => $tModul->nama_modul,
+                    'deskripsi'     => $tModul->deskripsi,
+                    'start_day'     => $tModul->start_day,
+                    'duration_days' => $tModul->duration_days,
                 ]);
 
                 foreach ($tModul->templateBloks as $tBlok) {
