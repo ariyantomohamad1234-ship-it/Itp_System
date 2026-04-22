@@ -4,12 +4,23 @@
 
 @section('styles')
 <style>
+    /* Layout consistency with dashboard */
+    .manage-project-container {
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+        padding: 0;
+        margin: 0;
+    }
+
     .section-card {
         background: var(--card);
         border: 1px solid var(--border);
         border-radius: 1rem;
         margin-bottom: 1rem;
-        overflow: hidden;
+        overflow: visible;
+        width: 100%;
+        box-sizing: border-box;
     }
     .section-header {
         padding: 1rem 1.25rem;
@@ -19,20 +30,28 @@
         align-items: center;
         cursor: pointer;
         transition: background 0.2s;
+        gap: 8px;
+        min-width: 0;
+        flex-wrap: wrap;
     }
     .section-header:hover { background: #f8fafc; }
     .section-header .chevron-icon {
         transition: transform 0.3s ease;
         font-size: 0.7rem;
         color: var(--text-muted);
+        flex-shrink: 0;
     }
     .section-header[aria-expanded="true"] .chevron-icon { transform: rotate(180deg); }
-    .section-body { padding: 1.25rem; }
+    .section-body { 
+        padding: 1.25rem; 
+        overflow-x: auto; 
+        -webkit-overflow-scrolling: touch;
+    }
 
     /* Forms */
     .add-form { display: flex; gap: 8px; align-items: end; flex-wrap: wrap; }
     .add-form .form-control,
-    .add-form .form-select { font-size: 0.85rem; padding: 0.45rem 0.75rem; border-radius: 0.5rem; }
+    .add-form .form-select { font-size: 0.85rem; padding: 0.45rem 0.75rem; border-radius: 0.5rem; min-width: 0; box-sizing: border-box; }
 
     /* ITP Add Form — stacked grid layout */
     .itp-form-card {
@@ -98,6 +117,8 @@
         transition: all 0.2s;
         cursor: pointer;
         background: #fff;
+        gap: 8px;
+        min-width: 0;
     }
     .tree-item:hover { background: #f8fafc; border-color: #e2e8f0; box-shadow: 0 2px 8px -2px rgba(0,0,0,0.04); }
 
@@ -179,19 +200,102 @@
     .project-header .meta { color: #94a3b8; font-size: 0.8rem; position: relative; }
     .project-header .meta strong { color: #cbd5e1; }
 
+    @media (max-width: 992px) {
+        .manage-project-container {
+            margin: 0;
+            padding: 0;
+        }
+        .page-content {
+            padding-left: 1.5rem;
+        }
+    }
+
     @media (max-width: 768px) {
+        .section-header {
+            flex-direction: row;
+            align-items: center;
+            padding: 0.875rem 1rem;
+            position: relative;
+        }
+        .section-header strong {
+            flex: 1;
+            min-width: 0;
+        }
+        .section-header .chevron-icon {
+            position: static;
+            margin-left: auto;
+            flex-shrink: 0;
+        }
         .itp-form-row { grid-template-columns: 1fr; }
         .itp-code-row { grid-template-columns: 1fr; }
         .itp-val-row { grid-template-columns: repeat(2, 1fr); }
         .itp-val-row .btn-submit-col { grid-column: 1 / -1; }
         .tree-node { margin-left: 0.75rem; padding-left: 0.75rem; }
+        .tree-item {
+            flex-direction: row;
+            align-items: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+        .add-form {
+            flex-direction: column;
+        }
+        .add-form .form-control,
+        .add-form .form-select,
+        .add-form button {
+            width: 100%;
+        }
+        .section-body {
+            padding: 1rem;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .manage-project-container {
+            padding: 0;
+        }
+        .page-content {
+            padding: 1rem;
+            padding-left: 1.25rem;
+        }
+        .project-header {
+            padding: 1.25rem 1rem;
+            border-radius: 0.75rem;
+            margin-bottom: 1rem;
+        }
+        .project-header h5 {
+            font-size: 1.1rem;
+        }
+        .project-header .meta {
+            font-size: 0.75rem;
+        }
+        .section-header {
+            padding: 0.75rem 0.875rem;
+        }
+        .section-body {
+            padding: 0.875rem;
+        }
+        .tree-node {
+            margin-left: 0.5rem;
+            padding-left: 0.5rem;
+        }
+        .itp-form-row {
+            gap: 0.5rem;
+        }
+        .itp-form-card {
+            padding: 0.75rem;
+        }
+        .btn-back {
+            font-size: 0.75rem;
+        }
     }
 </style>
 @endsection
 
 @section('content')
-<div class="fade-up">
-    <a href="/admin/dashboard" class="btn-back mb-3 d-inline-flex"><i class="fas fa-arrow-left"></i> Kembali</a>
+<div class="manage-project-container">
+    <div class="fade-up">
+        <a href="/admin/dashboard" class="btn-back mb-3 d-inline-flex"><i class="fas fa-arrow-left"></i> Kembali</a>
 
     <!-- PROJECT HEADER -->
     <div class="project-header">
@@ -500,6 +604,7 @@
         </div>
     </div>
     @endif
+</div>
 </div>
 
 @section('scripts')
