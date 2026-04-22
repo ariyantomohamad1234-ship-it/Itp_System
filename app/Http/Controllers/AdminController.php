@@ -6,11 +6,13 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use App\Models\Project;
+use App\Models\ProjectTemplate;
 use App\Models\Modul;
 use App\Models\Blok;
 use App\Models\SubBlok;
 use App\Models\Itp;
 use App\Models\User;
+use App\Services\ProjectTemplateService;
 
 class AdminController extends Controller
 {
@@ -71,7 +73,8 @@ class AdminController extends Controller
 
     public function createProject()
     {
-        return view('admin.projects-create');
+        $templates = ProjectTemplate::getActiveTemplates();
+        return view('admin.projects-create', compact('templates'));
     }
 
     public function storeProject(Request $request)
@@ -83,21 +86,41 @@ class AdminController extends Controller
             'tanggal_kontrak' => 'nullable|date',
             'tanggal_mulai' => 'nullable|date',
             'deadline' => 'nullable|date',
+            'template_id' => 'nullable|exists:project_templates,id',
         ]);
 
+        $projectData = $request->only('nama_project', 'kode_project', 'deskripsi', 'tanggal_kontrak', 'tanggal_mulai', 'deadline');
+
+        // Mode template: clone dari template
+        if ($request->filled('template_id')) {
+            $template = ProjectTemplate::findOrFail($request->template_id);
+            $service = new ProjectTemplateService();
+            $project = $service->cloneTemplate($template, $projectData);
+
+            $stats = [
+                'moduls' => $project->moduls()->count(),
+                'bloks'  => \App\Models\Blok::whereIn('modul_id', $project->moduls()->pluck('id'))->count(),
+            ];
+
+            return redirect('/admin/dashboard')->with('success',
+                "Project berhasil dibuat dari template '{$template->name}'! ({$stats['moduls']} modul, {$stats['bloks']} blok)"
+            );
+        }
+
+        // Mode custom/manual: buat project kosong
         DB::table('projects')->insert([
-            'nama_project' => $request->nama_project,
-            'kode_project' => $request->kode_project,
-            'deskripsi' => $request->deskripsi,
-            'tanggal_kontrak' => $request->tanggal_kontrak,
-            'tanggal_mulai' => $request->tanggal_mulai,
-            'deadline' => $request->deadline,
+            'nama_project' => $projectData['nama_project'],
+            'kode_project' => $projectData['kode_project'],
+            'deskripsi' => $projectData['deskripsi'],
+            'tanggal_kontrak' => $projectData['tanggal_kontrak'],
+            'tanggal_mulai' => $projectData['tanggal_mulai'],
+            'deadline' => $projectData['deadline'],
             'status' => 'active',
             'created_at' => now(),
             'updated_at' => now(),
         ]);
 
-        return redirect('/admin/dashboard')->with('success', 'Project berhasil dibuat!');
+        return redirect('/admin/dashboard')->with('success', 'Project berhasil dibuat (mode manual)!');
     }
 
     /**

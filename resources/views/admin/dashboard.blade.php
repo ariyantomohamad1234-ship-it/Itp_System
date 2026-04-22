@@ -109,7 +109,12 @@
                     @endphp
                     <tr>
                         <td class="fw-bold text-muted">{{ $loop->iteration }}</td>
-                        <td class="fw-bold">{{ $p->nama_project }}</td>
+                        <td class="fw-bold">
+                            {{ $p->nama_project }}
+                            @if($p->template_id)
+                                <span class="badge bg-success bg-opacity-10 text-success rounded-pill ms-1" style="font-size:0.5rem;vertical-align:middle" title="Dibuat dari template">📋 Template</span>
+                            @endif
+                        </td>
                         <td><code>{{ $p->kode_project }}</code></td>
                         <td class="text-muted" style="font-size:0.8rem">{{ $p->tanggal_mulai ? \Carbon\Carbon::parse($p->tanggal_mulai)->format('d M Y') : '-' }}</td>
                         <td>{!! $deadlineBadge ?: '<span class="text-muted" style="font-size:0.65rem">—</span>' !!}</td>
