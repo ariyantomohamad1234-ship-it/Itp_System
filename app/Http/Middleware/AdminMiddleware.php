@@ -10,7 +10,7 @@ class AdminMiddleware
     public function handle(Request $request, Closure $next)
     {
         $user = session('user');
-        if (!$user || $user->role !== 'admin') {
+        if (!$user || !in_array($user->role, ['admin', 'admin_galangan'])) {
             return redirect('/dashboard')->with('error', 'Akses ditolak. Anda bukan admin.');
         }
 

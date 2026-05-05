@@ -6,26 +6,110 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use App\Models\Project;
+use App\Models\ProjectTemplate;
 use App\Models\Modul;
 use App\Models\Blok;
 use App\Models\SubBlok;
 use App\Models\Itp;
 use App\Models\User;
+use App\Models\AssemblyCode;
+use App\Models\ActivityLog;
+use App\Services\ProjectTemplateService;
 
 class AdminController extends Controller
 {
     public function dashboard()
     {
-        $totalUsers = DB::table('users')->count();
-        $totalProjects = DB::table('projects')->count();
-        $totalModuls = DB::table('moduls')->count();
-        $totalItps = DB::table('itps')->count();
-        $users = User::orderBy('id', 'desc')->get();
-        $projects = Project::with('users')->orderBy('id', 'desc')->get();
+        $userSession = session('user');
+        $currentUser = User::find($userSession->id);
+        
+        $projectsQuery = Project::with('users')->orderBy('id', 'desc');
+        $usersQuery = User::with('projects')->orderBy('id', 'desc');
+        
+        if ($currentUser->isAdminGalangan()) {
+            // Admin Galangan only sees projects they are assigned to
+            $assignedProjectIds = $currentUser->projects()->pluck('projects.id')->toArray();
+            
+            $projectsQuery->whereIn('id', $assignedProjectIds);
+            
+            // Users assigned to those projects
+            $usersQuery->whereHas('projects', function($q) use ($assignedProjectIds) {
+                $q->whereIn('projects.id', $assignedProjectIds);
+            });
+            
+            $projects = $projectsQuery->get();
+            $users = $usersQuery->get();
+            
+            $totalUsers = $users->count();
+            $totalProjects = $projects->count();
+            
+            $totalModuls = DB::table('moduls')
+                ->whereIn('project_id', $assignedProjectIds)
+                ->count();
+                
+            $totalItps = DB::table('itps')
+                ->join('sub_bloks', 'itps.sub_blok_id', '=', 'sub_bloks.id')
+                ->join('bloks', 'sub_bloks.blok_id', '=', 'bloks.id')
+                ->join('moduls', 'bloks.modul_id', '=', 'moduls.id')
+                ->whereIn('moduls.project_id', $assignedProjectIds)
+                ->count();
+
+            // Scoped Activity
+            $recentActivity = DB::table('itp_data')
+                ->join('itps', 'itp_data.itp_id', '=', 'itps.id')
+                ->join('sub_bloks', 'itps.sub_blok_id', '=', 'sub_bloks.id')
+                ->join('bloks', 'sub_bloks.blok_id', '=', 'bloks.id')
+                ->join('moduls', 'bloks.modul_id', '=', 'moduls.id')
+                ->join('users', 'itp_data.uploaded_by', '=', 'users.id')
+                ->whereIn('moduls.project_id', $assignedProjectIds)
+                ->select('itp_data.*', 'users.name as user_name', 'users.role as user_role', 'itps.code as itp_code')
+                ->orderBy('itp_data.updated_at', 'desc')
+                ->limit(10)
+                ->get();
+        } else {
+            // Super Admin sees everything
+            $projects = $projectsQuery->get();
+            $users = $usersQuery->get();
+            
+            $totalUsers = User::count();
+            $totalProjects = Project::count();
+            $totalModuls = DB::table('moduls')->count();
+            $totalItps = DB::table('itps')->count();
+
+            // All Activity
+            $recentActivity = DB::table('itp_data')
+                ->join('itps', 'itp_data.itp_id', '=', 'itps.id')
+                ->join('users', 'itp_data.uploaded_by', '=', 'users.id')
+                ->select('itp_data.*', 'users.name as user_name', 'users.role as user_role', 'itps.code as itp_code')
+                ->orderBy('itp_data.updated_at', 'desc')
+                ->limit(15)
+                ->get();
+        }
+
+        // Calculate progress for each project
+        foreach ($projects as $project) {
+            $totalProjectItps = DB::table('itps')
+                ->join('sub_bloks', 'itps.sub_blok_id', '=', 'sub_bloks.id')
+                ->join('bloks', 'sub_bloks.blok_id', '=', 'bloks.id')
+                ->join('moduls', 'bloks.modul_id', '=', 'moduls.id')
+                ->where('moduls.project_id', $project->id)
+                ->count();
+                
+            $approvedProjectItps = DB::table('itp_data')
+                ->join('itps', 'itp_data.itp_id', '=', 'itps.id')
+                ->join('sub_bloks', 'itps.sub_blok_id', '=', 'sub_bloks.id')
+                ->join('bloks', 'sub_bloks.blok_id', '=', 'bloks.id')
+                ->join('moduls', 'bloks.modul_id', '=', 'moduls.id')
+                ->where('moduls.project_id', $project->id)
+                ->where('itp_data.status', 'approved')
+                ->count();
+                
+            $project->progress = $totalProjectItps > 0 ? round(($approvedProjectItps / $totalProjectItps) * 100) : 0;
+        }
 
         return view('admin.dashboard', compact(
             'totalUsers', 'totalProjects', 'totalModuls', 'totalItps',
-            'users', 'projects'
+            'users', 'projects', 'currentUser', 'recentActivity'
         ));
     }
 
@@ -42,7 +126,7 @@ class AdminController extends Controller
             'name' => 'required|string|max:255',
             'username' => 'required|string|max:255|unique:users,username',
             'password' => 'required|string|min:4',
-            'role' => 'required|in:admin,yard,class,os,stat',
+            'role' => 'required|in:admin,admin_galangan,yard,class,os,stat',
         ]);
 
         DB::table('users')->insert([
@@ -54,6 +138,8 @@ class AdminController extends Controller
             'updated_at' => now(),
         ]);
 
+        ActivityLog::record('create_user', "Membuat user baru: {$request->name} ({$request->role})");
+
         return redirect('/admin/dashboard')->with('success', 'User berhasil dibuat!');
     }
 
@@ -61,6 +147,7 @@ class AdminController extends Controller
     {
         $user = DB::table('users')->where('id', $id)->first();
         if ($user && $user->role !== 'admin') {
+            ActivityLog::record('delete_user', "Menghapus user: {$user->name}");
             DB::table('users')->where('id', $id)->delete();
             return redirect('/admin/dashboard')->with('success', 'User berhasil dihapus!');
         }
@@ -71,33 +158,100 @@ class AdminController extends Controller
 
     public function createProject()
     {
-        return view('admin.projects-create');
+        $templates = ProjectTemplate::getActiveTemplates();
+        return view('admin.projects-create', compact('templates'));
     }
 
     public function storeProject(Request $request)
     {
         $request->validate([
             'nama_project' => 'required|string|max:255',
-            'kode_project' => 'required|string|max:100|unique:projects,kode_project',
+            'kode_project' => 'required|string|max:100',
             'deskripsi' => 'nullable|string',
             'tanggal_kontrak' => 'nullable|date',
             'tanggal_mulai' => 'nullable|date',
             'deadline' => 'nullable|date',
+            'template_id' => 'nullable|exists:project_templates,id',
         ]);
 
-        DB::table('projects')->insert([
-            'nama_project' => $request->nama_project,
-            'kode_project' => $request->kode_project,
-            'deskripsi' => $request->deskripsi,
-            'tanggal_kontrak' => $request->tanggal_kontrak,
-            'tanggal_mulai' => $request->tanggal_mulai,
-            'deadline' => $request->deadline,
+        // Check uniqueness manually to provide better feedback
+        $existingProject = DB::table('projects')->where('kode_project', $request->kode_project)->first();
+        if ($existingProject) {
+            $userSession = session('user');
+            $currentUser = User::find($userSession->id);
+            
+            $isAssignedToMe = DB::table('project_user')
+                ->where('project_id', $existingProject->id)
+                ->where('user_id', $currentUser->id)
+                ->exists();
+
+            if ($currentUser->isAdminGalangan() && !$isAssignedToMe) {
+                return back()->withErrors(['kode_project' => 'Kode project ini sudah digunakan di galangan lain. Silakan gunakan kode unik untuk galangan Anda.'])->withInput();
+            }
+            
+            return back()->withErrors(['kode_project' => 'Kode project sudah digunakan.'])->withInput();
+        }
+
+        $projectData = $request->only('nama_project', 'kode_project', 'deskripsi', 'tanggal_kontrak', 'tanggal_mulai', 'deadline');
+
+        // Mode template: clone dari template
+        if ($request->filled('template_id')) {
+            $template = ProjectTemplate::findOrFail($request->template_id);
+            $service = new ProjectTemplateService();
+            $project = $service->cloneTemplate($template, $projectData);
+
+            // Auto-assign if admin_galangan
+            $userSession = session('user');
+            $currentUser = User::find($userSession->id);
+            if ($currentUser->isAdminGalangan()) {
+                DB::table('project_user')->insert([
+                    'project_id' => $project->id,
+                    'user_id' => $currentUser->id,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+
+            $stats = [
+                'moduls' => $project->moduls()->count(),
+                'bloks'  => \App\Models\Blok::whereIn('modul_id', $project->moduls()->pluck('id'))->count(),
+            ];
+
+            return redirect('/admin/dashboard')->with('success',
+                "Project berhasil dibuat dari template '{$template->name}'! ({$stats['moduls']} modul, {$stats['bloks']} blok)"
+            );
+        }
+
+        // Mode custom/manual: buat project kosong
+        $projectId = DB::table('projects')->insertGetId([
+            'nama_project' => $projectData['nama_project'],
+            'kode_project' => $projectData['kode_project'],
+            'deskripsi' => $projectData['deskripsi'],
+            'tanggal_kontrak' => $projectData['tanggal_kontrak'],
+            'tanggal_mulai' => $projectData['tanggal_mulai'],
+            'deadline' => $projectData['deadline'],
             'status' => 'active',
             'created_at' => now(),
             'updated_at' => now(),
         ]);
 
-        return redirect('/admin/dashboard')->with('success', 'Project berhasil dibuat!');
+        $project = Project::find($projectId);
+        
+        // Auto-assign if admin_galangan
+        $userSession = session('user');
+        $currentUser = User::find($userSession->id);
+        if ($currentUser->isAdminGalangan()) {
+            DB::table('project_user')->insert([
+                'project_id' => $projectId,
+                'user_id' => $currentUser->id,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+
+        ActivityLog::record('create_project', "Membuat proyek baru: {$project->nama_project}", $project);
+
+        return redirect('/admin/dashboard')->with('success', 'Project berhasil dibuat (mode manual)!');
     }
 
     /**
@@ -164,13 +318,32 @@ class AdminController extends Controller
 
     public function manageProject($id)
     {
+        $userSession = session('user');
+        $currentUser = User::find($userSession->id);
+
         $project = Project::with('users')->where('id', $id)->first();
         if (!$project) abort(404);
 
+        // Security check for Admin Galangan
+        if ($currentUser->isAdminGalangan()) {
+            $isAssigned = $currentUser->projects()->where('projects.id', $id)->exists();
+            if (!$isAssigned) {
+                return redirect('/admin/dashboard')->with('error', 'Anda tidak memiliki akses untuk mengelola project ini.');
+            }
+        }
+
         $moduls = Modul::where('project_id', $id)->with('bloks.subBloks.itps')->get();
+        
+        // Show all roles except Super Admin for assignment
         $allUsers = User::where('role', '!=', 'admin')->get();
 
-        return view('admin.manage-project', compact('project', 'moduls', 'allUsers'));
+        try {
+            $assemblyCodes = AssemblyCode::orderBy('code')->get();
+        } catch (\Illuminate\Database\QueryException $e) {
+            $assemblyCodes = collect();
+        }
+
+        return view('admin.manage-project', compact('project', 'moduls', 'allUsers', 'assemblyCodes', 'currentUser'));
     }
 
     public function storeModul(Request $request)
@@ -219,11 +392,16 @@ class AdminController extends Controller
             'class_val' => 'required|in:W,RV,-,NA',
             'os_val' => 'required|in:W,RV,-,NA',
             'stat_val' => 'required|in:W,RV,-,NA',
+            'metode_inspeksi' => 'nullable|string|max:255',
+            'alat_peralatan' => 'nullable|string|max:255',
+            'referensi_rules' => 'nullable|string|max:255',
+            'syarat_pemenuhan' => 'nullable|string|max:255',
         ]);
 
         Itp::create($request->only(
             'sub_blok_id', 'assembly_code', 'assembly_description', 'code', 'item',
-            'yard_val', 'class_val', 'os_val', 'stat_val'
+            'yard_val', 'class_val', 'os_val', 'stat_val',
+            'metode_inspeksi', 'alat_peralatan', 'referensi_rules', 'syarat_pemenuhan'
         ));
 
         return back()->with('success', 'Kode Inspeksi berhasil ditambahkan!');
@@ -251,5 +429,27 @@ class AdminController extends Controller
     {
         Itp::findOrFail($id)->delete();
         return back()->with('success', 'Kode Inspeksi berhasil dihapus!');
+    }
+
+    /**
+     * Update module schedule (start_day, duration_days) — FEAT-07
+     */
+    public function updateModulSchedule(Request $request, $id)
+    {
+        $request->validate([
+            'start_day' => 'nullable|integer|min:1',
+            'duration_days' => 'nullable|integer|min:1',
+        ]);
+
+        $modul = Modul::findOrFail($id);
+        $modul->update($request->only('start_day', 'duration_days'));
+
+        return back()->with('success', 'Jadwal modul berhasil diperbarui!');
+    }
+
+    public function showLogs()
+    {
+        $logs = ActivityLog::with('user')->orderBy('created_at', 'desc')->paginate(50);
+        return view('admin.logs', compact('logs'));
     }
 }

@@ -11,7 +11,7 @@
     .picker-hero h2 {
         font-size: 1.75rem;
         font-weight: 900;
-        background: linear-gradient(135deg, #1e293b, #3b82f6);
+        background: linear-gradient(135deg, #dc2626, #1e293b);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         margin-bottom: 0.25rem;
@@ -40,7 +40,7 @@
     }
     .project-card:hover {
         transform: translateY(-8px);
-        box-shadow: 0 20px 40px -10px rgba(59,130,246,0.15);
+        box-shadow: 0 20px 40px -10px rgba(220, 38, 38, 0.15);
         border-color: var(--accent);
     }
 
@@ -53,7 +53,7 @@
         position: absolute;
         top: 0; left: 0; right: 0;
         height: 4px;
-        background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+        background: linear-gradient(90deg, #dc2626, #ef4444);
         opacity: 0;
         transition: opacity 0.3s;
     }
@@ -125,20 +125,30 @@
     }
     .progress-bar-fill.complete { background: linear-gradient(90deg, #10b981, #059669); }
 
-    .empty-state {
-        text-align: center;
-        padding: 4rem 2rem;
-        grid-column: 1 / -1;
-    }
-    .empty-state i { font-size: 4rem; color: #e2e8f0; margin-bottom: 1.5rem; display: block; }
 </style>
 @endsection
 
 @section('content')
-<div class="fade-up">
-    <div class="picker-hero">
-        <h2>Selamat Datang, {{ session('user')->name }}</h2>
-        <p>Pilih project untuk memulai inspeksi</p>
+    <div class="picker-hero text-center mb-5">
+        <div class="d-inline-block p-3 rounded-circle bg-danger bg-opacity-10 mb-3">
+            <i class="fas fa-ship fa-2x text-danger"></i>
+        </div>
+        <h2 class="fw-black mb-2">Selamat Datang, {{ session('user')->name }}</h2>
+        <p class="text-muted mx-auto" style="max-width: 600px;">
+            Akses dashboard monitoring ITP untuk setiap proyek Anda di bawah ini. Pantau progres, unggah data inspeksi, dan kelola sertifikasi secara real-time.
+        </p>
+        
+        <div class="d-flex justify-content-center gap-4 mt-4">
+            <div class="text-center">
+                <div class="fw-bold text-danger h5 mb-0">{{ count($projects) }}</div>
+                <div class="text-muted" style="font-size: 0.7rem; letter-spacing: 1px; text-transform: uppercase;">Proyek Aktif</div>
+            </div>
+            <div class="border-start opacity-25"></div>
+            <div class="text-center">
+                <div class="fw-bold text-danger h5 mb-0">{{ session('user')->role }}</div>
+                <div class="text-muted" style="font-size: 0.7rem; letter-spacing: 1px; text-transform: uppercase;">Akses Role</div>
+            </div>
+        </div>
     </div>
 
     <div class="project-grid">

@@ -5,7 +5,7 @@
 @section('styles')
 <style>
     .page-header-card {
-        background: linear-gradient(135deg, #0f172a, #1e293b);
+        background: linear-gradient(135deg, #dc2626, #991b1b);
         border-radius: 1.25rem;
         padding: 1.5rem 2rem;
         color: #fff;
@@ -13,12 +13,33 @@
         position: relative;
         overflow: hidden;
     }
+    .summary-card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 1.25rem;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        display: flex;
+        align-items: center;
+        gap: 2rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    }
+    .summary-stat { text-align: center; }
+    .summary-stat .val { font-size: 1.5rem; font-weight: 800; color: var(--text); display: block; }
+    .summary-stat .lbl { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); letter-spacing: 1px; }
+    .summary-progress { flex: 1; }
+    
+    @media (max-width: 768px) {
+        .summary-card { flex-direction: column; gap: 1rem; align-items: stretch; }
+        .summary-stats { display: flex; justify-content: space-around; }
+    }
+
     .page-header-card::before {
         content: '';
         position: absolute;
         top: -50%; right: -20%;
         width: 300px; height: 300px;
-        background: radial-gradient(circle, rgba(99,102,241,0.15) 0%, transparent 60%);
+        background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 60%);
         border-radius: 50%;
     }
     .page-header-card h4 { font-weight: 800; margin-bottom: 4px; position: relative; }
@@ -80,7 +101,7 @@
     }
     .role-dot:hover { transform: scale(1.2); }
     .role-dot.done { background: #10b981; color: #fff; }
-    .role-dot.approved { background: #3b82f6; color: #fff; box-shadow: 0 0 0 2px #fff, 0 0 0 4px #3b82f6; }
+    .role-dot.approved { background: #dc2626; color: #fff; box-shadow: 0 0 0 2px #fff, 0 0 0 4px #dc2626; }
     .role-dot.pending { background: #e2e8f0; color: #94a3b8; }
 
     .btn-itp {
@@ -90,10 +111,10 @@
         gap: 6px; white-space: nowrap; color: #fff;
     }
     .btn-itp:hover { transform: translateY(-1px); }
-    .btn-itp-submit { background: linear-gradient(135deg, #3b82f6, #6366f1); }
-    .btn-itp-submit:hover { box-shadow: 0 4px 12px rgba(59,130,246,0.3); }
+    .btn-itp-submit { background: linear-gradient(135deg, #dc2626, #ef4444); }
+    .btn-itp-submit:hover { box-shadow: 0 4px 12px rgba(220,38,38,0.3); }
     .btn-itp-done { background: linear-gradient(135deg, #10b981, #059669); }
-    .btn-itp-approved { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+    .btn-itp-approved { background: linear-gradient(135deg, #dc2626, #991b1b); }
     .btn-itp-view { background: linear-gradient(135deg, #64748b, #475569); }
 
     /* MODAL */
@@ -186,12 +207,71 @@
     <div class="page-header-card">
         <div class="d-flex justify-content-between align-items-center">
             <div>
-                <h4><i class="fas fa-microchip me-2"></i>{{ $subblok->nama_sub_blok }}</h4>
-                <p>Assembly Code dan Kode Inspeksi
-                    <span class="badge bg-primary rounded-pill ms-2" style="font-size:0.65rem">{{ $grouped->count() }} Assembly</span>
-                </p>
+                <h4><i class="fas fa-layer-group me-2"></i>{{ $subblok->nama_sub_blok }}</h4>
+                <p>Kelola dan pantau status inspeksi ITP</p>
             </div>
-            <a href="/subblok/{{ $blok->id }}" class="btn-back" style="color:#cbd5e1;border-color:rgba(255,255,255,0.15)"><i class="fas fa-arrow-left"></i> Kembali</a>
+            <div class="d-flex gap-2 align-items-center">
+                <a href="/subblok/{{ $blok->id }}" class="btn-back" style="color:#cbd5e1;border-color:rgba(255,255,255,0.15)"><i class="fas fa-arrow-left"></i> Kembali</a>
+            </div>
+        </div>
+    </div>
+
+    @php 
+        $allItps = $grouped->flatten();
+        $totalCount = $allItps->count();
+        $approvedCount = $allItps->filter(function($i) {
+            return $i->itpData->where('status', 'approved')->count() > 0;
+        })->count();
+        $percent = $totalCount > 0 ? round(($approvedCount / $totalCount) * 100) : 0;
+    @endphp
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-8">
+            <div class="summary-card mb-0 h-100">
+                <div class="summary-stats d-flex gap-4">
+                    <div class="summary-stat">
+                        <span class="val">{{ $totalCount }}</span>
+                        <span class="lbl">Total ITP</span>
+                    </div>
+                    <div class="summary-stat">
+                        <span class="val text-danger">{{ $approvedCount }}</span>
+                        <span class="lbl">Approved</span>
+                    </div>
+                </div>
+                <div class="summary-progress ms-md-4">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span class="fw-bold" style="font-size:0.75rem">Keseluruhan Progres ACC</span>
+                        <span class="fw-bold text-danger" style="font-size:0.75rem">{{ $percent }}%</span>
+                    </div>
+                    <div class="progress" style="height: 10px; border-radius: 10px; background: #f1f5f9;">
+                        <div class="progress-bar bg-danger" style="width: {{ $percent }}%; border-radius: 10px;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm rounded-4 h-100" style="background: #fff5f5; border: 1px solid #fed7d7 !important;">
+                <div class="card-body p-3">
+                    <h6 class="fw-bold text-danger mb-2" style="font-size:0.8rem"><i class="fas fa-info-circle me-1"></i> Quick Info</h6>
+                    <ul class="list-unstyled mb-0" style="font-size:0.7rem; color: #7f1d1d;">
+                        <li class="mb-1"><i class="fas fa-circle me-1 text-danger" style="font-size:0.4rem"></i> Klik pada baris ITP untuk upload data.</li>
+                        <li><i class="fas fa-circle me-1 text-danger" style="font-size:0.4rem"></i> Status <strong>ACC</strong> berarti telah disetujui Class/Owner.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    <div class="row g-3 mb-4">
+        <div class="col-md-12">
+            <div class="summary-card" style="padding: 1.25rem;">
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-end-0" style="border-radius: 0.75rem 0 0 0.75rem; border-color: #e2e8f0;">
+                        <i class="fas fa-search text-muted"></i>
+                    </span>
+                    <input type="text" id="searchInput" class="form-control border-start-0 ps-0" 
+                           placeholder="Cari kode assembly atau item inspeksi..." 
+                           style="border-radius: 0 0.75rem 0.75rem 0; border-color: #e2e8f0; font-size: 0.85rem; height: 45px;">
+                </div>
+            </div>
         </div>
     </div>
 
@@ -200,9 +280,6 @@
         <div class="assembly-header" data-bs-toggle="collapse" data-bs-target="#asm-{{ Str::slug($assemblyCode) }}">
             <div>
                 <div class="asm-code"><i class="fas fa-microchip me-2"></i>{{ $assemblyCode }}</div>
-                @if($items->first()->assembly_description)
-                    <div class="asm-desc">{{ $items->first()->assembly_description }}</div>
-                @endif
             </div>
             <div class="d-flex align-items-center gap-2">
                 <span class="asm-count">{{ $items->count() }} Kode</span>
@@ -211,6 +288,37 @@
         </div>
         <div class="collapse" id="asm-{{ Str::slug($assemblyCode) }}">
             <div class="assembly-body">
+                <!-- WORK STEPS / ITEMS TO CHECK -->
+                <div class="work-steps-section p-3" style="background: #fffcfc; border-bottom: 1px solid #fee2e2;">
+                    <div class="d-flex align-items-center mb-2">
+                        <span class="badge bg-danger bg-opacity-10 text-danger px-2 py-1" style="font-size: 0.65rem; font-weight: 800; letter-spacing: 0.5px;">
+                            <i class="fas fa-list-check me-1"></i> WORK STEPS / ITEMS TO CHECK
+                        </span>
+                    </div>
+                    <div class="work-steps-list ms-1">
+                        @if($items->first()->assembly_description)
+                            @php 
+                                // Split by newline or period followed by space
+                                $steps = preg_split('/\r\n|\r|\n/', $items->first()->assembly_description); 
+                            @endphp
+                            <ul class="list-unstyled mb-0">
+                                @foreach($steps as $idx => $step)
+                                    @if(trim($step))
+                                        <li class="d-flex align-items-start gap-2 mb-2" style="font-size: 0.82rem; color: #475569;">
+                                            <span class="text-danger fw-bold" style="font-size: 0.75rem; margin-top: 2px;">{{ $idx + 1 }}.</span>
+                                            <span class="fw-medium">{{ trim($step) }}</span>
+                                        </li>
+                                    @endif
+                                @endforeach
+                            </ul>
+                        @else
+                            <div class="text-muted fst-italic" style="font-size: 0.75rem; padding: 5px 0;">
+                                <i class="fas fa-info-circle me-1"></i> Belum ada item pengecekan yang ditambahkan untuk assembly ini.
+                            </div>
+                        @endif
+                    </div>
+                </div>
+
                 @foreach($items as $itp)
                 @php
                     $val = $itp->getValForRole($role);
@@ -308,7 +416,16 @@ function openItpModal(itpId) {
     const modal = document.getElementById('itpModal');
     const body = document.getElementById('modalBody');
     modal.classList.add('active');
-    body.innerHTML = '<div class="text-center py-4"><div class="spinner-border text-primary"></div><p class="text-muted mt-2">Memuat...</p></div>';
+    
+    // Skeleton Loading State
+    body.innerHTML = `
+        <div class="skeleton mb-3" style="height: 60px;"></div>
+        <div class="row g-2 mb-3">
+            <div class="col-6"><div class="skeleton" style="height: 40px;"></div></div>
+            <div class="col-6"><div class="skeleton" style="height: 40px;"></div></div>
+        </div>
+        <div class="skeleton" style="height: 120px;"></div>
+    `;
 
     fetch(`/itp-data/${itpId}`)
         .then(r => r.json())
@@ -321,6 +438,8 @@ function openItpModal(itpId) {
             const allVals = res.all_vals;
             const photoRequired = res.photo_required;
             const role = res.role;
+            const canAccRole = res.can_acc_role;
+            const visibleRoles = res.visible_roles || [];
 
             document.getElementById('modalTitle').innerHTML = `<i class="fas fa-file-alt me-2 text-primary"></i>${itp.code} — ${itp.item}`;
 
@@ -332,11 +451,12 @@ function openItpModal(itpId) {
 
             for (const [r, rVal] of Object.entries(allVals)) {
                 const rData = allData.find(d => d.role === r);
-                const isDone = rData && (rData.status === 'done' || rData.status === 'approved');
                 const isApproved = rData && rData.status === 'approved';
-                const isRejected = rData && rData.status === 'rejected';
+                const isRejected = rData && (rData.status === 'rejected' || rData.status === 'needs_revision');
+                const isDone = rData && rData.status === 'done';
                 const isRequired = rVal === 'W' || rVal === 'RV';
                 const isMe = r === role;
+                const canView = visibleRoles.includes(r);
 
                 let statusHtml;
                 if (!isRequired) {
@@ -344,68 +464,133 @@ function openItpModal(itpId) {
                 } else if (isApproved) {
                     statusHtml = '<span class="text-primary" style="font-size:0.7rem"><i class="fas fa-shield-alt me-1"></i>ACC</span>';
                 } else if (isRejected) {
-                    statusHtml = '<span class="text-danger" style="font-size:0.7rem"><i class="fas fa-times-circle me-1"></i>Ditolak</span>';
+                    statusHtml = '<span class="text-danger" style="font-size:0.7rem"><i class="fas fa-times-circle me-1"></i>Revisi</span>';
                 } else if (isDone) {
                     statusHtml = '<span class="text-success" style="font-size:0.7rem"><i class="fas fa-check-circle me-1"></i>Done</span>';
                 } else {
                     statusHtml = '<span class="text-warning" style="font-size:0.7rem"><i class="fas fa-clock me-1"></i>Pending</span>';
                 }
 
-                html += `<div class="status-item ${isMe ? 'is-me' : ''}">
+                const clickable = canView && isRequired && rData && !isMe;
+                html += `<div class="status-item ${isMe ? 'is-me' : ''} ${clickable ? 'cursor-pointer' : ''}" ${clickable ? `onclick="toggleRoleDetail('${r}')"` : ''} style="${clickable ? 'cursor:pointer' : ''}">
                     <i class="fas ${roleIcons[r]} ${isMe ? 'text-primary' : 'text-muted'}" style="font-size:0.85rem"></i>
                     <div>
-                        <div class="role-name ${isMe ? 'text-primary' : ''}">${roleLabels[r]}${isMe ? ' (Anda)' : ''}</div>
+                        <div class="role-name ${isMe ? 'text-primary' : ''}">${roleLabels[r]}${isMe ? ' (Anda)' : ''}${clickable ? ' <i class="fas fa-eye" style="font-size:0.5rem"></i>' : ''}</div>
                         <span class="badge-val ${rVal === 'W' ? 'val-w' : rVal === 'RV' ? 'val-rv' : rVal === 'NA' ? 'val-na' : 'val-dash'}" style="font-size:0.5rem">${rVal}</span>
                     </div>
                     <div class="role-status">${statusHtml}</div>
                 </div>`;
+
+                // Expandable detail panel for cross-role visibility
+                if (clickable && rData) {
+                    html += `<div id="detail-${r}" style="display:none;grid-column:1/-1;background:#f8fafc;border:1px solid #e2e8f0;border-radius:0.5rem;padding:0.75rem;margin-bottom:0.5rem">
+                        <div class="fw-bold mb-1" style="font-size:0.75rem"><i class="fas fa-user me-1"></i>${rData.name} (${roleLabels[r]})</div>
+                        ${rData.photo ? `<img src="/storage/${rData.photo}" style="width:100%;max-height:180px;object-fit:contain;border-radius:0.5rem;margin-bottom:0.5rem">` : ''}
+                        <div style="font-size:0.8rem">${rData.keterangan || '<em class="text-muted">Tidak ada keterangan</em>'}</div>
+                        <div class="text-muted mt-1" style="font-size:0.65rem"><i class="fas fa-clock me-1"></i>${rData.updated_at ? new Date(rData.updated_at).toLocaleString('id-ID') : '-'}</div>
+                        ${rData.rejection_note ? `<div class="text-danger mt-1" style="font-size:0.7rem"><i class="fas fa-exclamation-triangle me-1"></i>Catatan reject: ${rData.rejection_note}</div>` : ''}
+                    </div>`;
+                }
             }
             html += '</div></div>';
 
-            // === SUBMIT / ACC SECTION ===
-            if (canSubmit) {
+            // === ACC/REJECT SUBORDINATE DATA (hierarchy-based) ===
+            const subData = allData.filter(d => d.can_acc || d.can_reject);
+            if (subData.length > 0) {
                 html += '<hr style="border-color:#f1f5f9">';
+                html += '<div class="fw-bold mb-2" style="font-size:0.8rem"><i class="fas fa-gavel me-1 text-success"></i>Review Data Bawahan</div>';
+                subData.forEach(d => {
+                    html += `<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:0.75rem;padding:0.75rem;margin-bottom:0.5rem">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="fw-bold" style="font-size:0.8rem"><i class="fas fa-user me-1"></i>${d.name} (${roleLabels[d.role] || d.role})</span>
+                            <span class="badge bg-warning text-dark" style="font-size:0.6rem">Menunggu Review</span>
+                        </div>
+                        ${d.photo ? `<img src="/storage/${d.photo}" style="width:100%;max-height:150px;object-fit:contain;border-radius:0.5rem;margin-bottom:0.5rem">` : ''}
+                        <div style="font-size:0.8rem;margin-bottom:0.5rem">${d.keterangan || '-'}</div>
+                        <div class="d-flex gap-2">
+                            <button onclick="accItpData(${d.id})" class="btn-acc flex-fill" style="padding:0.4rem;font-size:0.8rem" id="accBtn-${d.id}">
+                                <i class="fas fa-check-circle"></i> ACC
+                            </button>
+                            <button onclick="showRejectForm(${d.id})" class="btn btn-outline-danger flex-fill" style="padding:0.4rem;font-size:0.8rem;border-radius:0.625rem;font-weight:700">
+                                <i class="fas fa-times-circle"></i> Reject
+                            </button>
+                        </div>
+                        <div id="rejectForm-${d.id}" style="display:none;margin-top:0.5rem">
+                            <textarea id="rejectNote-${d.id}" class="form-control mb-2" rows="2" placeholder="Alasan reject (wajib diisi)..." style="font-size:0.8rem"></textarea>
+                            <button onclick="rejectItpData(${d.id})" class="btn btn-danger w-100" style="font-size:0.8rem;font-weight:700;border-radius:0.625rem" id="rejectBtn-${d.id}">
+                                <i class="fas fa-paper-plane me-1"></i>Kirim Reject
+                            </button>
+                        </div>
+                    </div>`;
+                });
+            }
 
-                // === ACC STATUS DISPLAY ===
+            // 4 POIN REFERENSI INSPEKSI
+            html += `<hr style="border-color:#f1f5f9">
+            <div class="mb-3 p-3 rounded-3" style="background:#f0f9ff; border:1px solid #bae6fd; border-left: 4px solid #0284c7;">
+                <div class="fw-bold text-primary mb-2" style="font-size:0.8rem"><i class="fas fa-book-open me-1"></i> Referensi & Panduan Inspeksi</div>
+                <div class="d-grid gap-2" style="font-size:0.75rem;">
+                    <div class="d-flex">
+                        <div class="text-muted" style="width:110px; font-weight:600;"><i class="fas fa-microscope me-1"></i> Metode</div>
+                        <div class="fw-bold flex-fill text-dark">: ${itp.metode_inspeksi || '-'}</div>
+                    </div>
+                    <div class="d-flex">
+                        <div class="text-muted" style="width:110px; font-weight:600;"><i class="fas fa-tools me-1"></i> Alat/Peralatan</div>
+                        <div class="fw-bold flex-fill text-dark">: ${itp.alat_peralatan || '-'}</div>
+                    </div>
+                    <div class="d-flex">
+                        <div class="text-muted" style="width:110px; font-weight:600;"><i class="fas fa-file-contract me-1"></i> Ref. Rules</div>
+                        <div class="fw-bold flex-fill text-dark">: ${itp.referensi_rules || '-'}</div>
+                    </div>
+                    <div class="d-flex">
+                        <div class="text-muted" style="width:110px; font-weight:600;"><i class="fas fa-check-double me-1"></i> Syarat Lulus</div>
+                        <div class="fw-bold flex-fill text-dark">: ${itp.syarat_pemenuhan || '-'}</div>
+                    </div>
+                </div>
+            </div>`;
+
+            // === MY SUBMIT SECTION ===
+            if (canSubmit) {
+
                 if (myData && myData.status === 'approved') {
                     html += `<div class="text-center mb-3">
                         <div class="acc-badge acc-approved"><i class="fas fa-shield-alt"></i> Data Anda sudah di-ACC</div>
                         <div class="text-muted mt-1" style="font-size:0.7rem">Disetujui pada: ${myData.approved_at ? new Date(myData.approved_at).toLocaleString('id-ID') : '-'}</div>
+                        <a href="/itp-data/${myData.id}/export" class="btn btn-sm btn-outline-success mt-2 fw-bold" target="_blank" style="border-radius:2rem; font-size:0.75rem; text-decoration:none">
+                            <i class="fas fa-file-pdf me-1"></i> Cetak Sertifikat ITP
+                        </a>
                     </div>`;
-                } else if (myData && myData.status === 'rejected') {
+                } else if (myData && (myData.status === 'needs_revision' || myData.status === 'rejected')) {
                     html += `<div class="text-center mb-3">
-                        <div class="acc-badge acc-rejected"><i class="fas fa-times-circle"></i> Data Ditolak</div>
-                        ${myData.rejection_note ? `<div class="text-danger mt-1" style="font-size:0.75rem">Catatan: ${myData.rejection_note}</div>` : ''}
+                        <div class="acc-badge acc-rejected"><i class="fas fa-redo"></i> Perlu Revisi</div>
+                        ${myData.rejection_note ? `<div class="text-danger mt-1" style="font-size:0.75rem"><i class="fas fa-comment-alt me-1"></i>Catatan: ${myData.rejection_note}</div>` : ''}
                     </div>`;
                 }
 
-                html += '<div class="fw-bold mb-2" style="font-size:0.8rem"><i class="fas fa-upload me-1 text-primary"></i>Upload Data ITP</div>';
+                const needsResubmit = myData && (myData.status === 'needs_revision' || myData.status === 'rejected');
+                const showForm = !myData || myData.status === 'done' || needsResubmit;
 
-                if (myData && myData.photo) {
-                    html += `<img src="/storage/${myData.photo}" class="photo-preview" id="previewImg">`;
-                }
+                if (showForm) {
+                    html += `<div class="fw-bold mb-2" style="font-size:0.8rem"><i class="fas fa-upload me-1 text-primary"></i>${needsResubmit ? 'Resubmit Data ITP' : 'Upload Data ITP'}</div>`;
 
-                html += `<div class="upload-zone" id="uploadZone">
-                    <input type="file" accept="image/*" id="photoInput" onchange="previewPhoto(this)">
-                    <i class="fas fa-cloud-upload-alt fa-2x text-muted mb-2"></i>
-                    <p class="text-muted mb-0" style="font-size:0.8rem">${myData && myData.photo ? 'Ganti foto' : 'Klik untuk upload foto'}</p>
-                    ${photoRequired ? '<p class="text-danger mt-1 mb-0" style="font-size:0.65rem"><i class="fas fa-exclamation-triangle me-1"></i>Foto WAJIB (Witness)</p>' : '<p class="text-muted mt-1 mb-0" style="font-size:0.65rem">Opsional</p>'}
-                </div>`;
+                    if (myData && myData.photo) {
+                        html += `<img src="/storage/${myData.photo}" class="photo-preview" id="previewImg">`;
+                    }
 
-                html += `<div class="mb-3 mt-3">
-                    <label class="form-label fw-bold" style="font-size:0.8rem">Keterangan</label>
-                    <textarea id="keteranganInput" class="form-control" rows="2" placeholder="Catatan inspeksi..." style="font-size:0.85rem">${myData ? (myData.keterangan || '') : ''}</textarea>
-                </div>`;
+                    html += `<div class="upload-zone" id="uploadZone">
+                        <input type="file" accept="image/*" id="photoInput" onchange="previewPhoto(this)">
+                        <i class="fas fa-cloud-upload-alt fa-2x text-muted mb-2"></i>
+                        <p class="text-muted mb-0" style="font-size:0.8rem">${myData && myData.photo ? 'Ganti foto' : 'Klik untuk upload foto'}</p>
+                        ${photoRequired ? '<p class="text-danger mt-1 mb-0" style="font-size:0.65rem"><i class="fas fa-exclamation-triangle me-1"></i>Foto WAJIB (Witness)</p>' : '<p class="text-muted mt-1 mb-0" style="font-size:0.65rem">Opsional</p>'}
+                    </div>`;
 
-                html += `<button onclick="submitItpData(${itp.id})" class="btn btn-accent w-100 mb-2" id="submitBtn">
-                    <i class="fas fa-save me-2"></i>${myData ? 'Update Data ITP' : 'Simpan Data ITP'}
-                </button>`;
+                    html += `<div class="mb-3 mt-3">
+                        <label class="form-label fw-bold" style="font-size:0.8rem">Keterangan</label>
+                        <textarea id="keteranganInput" class="form-control" rows="2" placeholder="Catatan inspeksi..." style="font-size:0.85rem">${myData ? (myData.keterangan || '') : ''}</textarea>
+                    </div>`;
 
-                // ACC BUTTON - hanya tampil jika status "done" (sudah submit tapi belum acc)
-                if (myData && myData.status === 'done') {
-                    html += `<button onclick="accItpData(${myData.id})" class="btn-acc w-100 mt-1" id="accBtn">
-                        <i class="fas fa-shield-alt"></i> Tandai ACC (Approved)
-                    </button>`;
+                    const btnLabel = needsResubmit ? '<i class="fas fa-redo me-2"></i>Resubmit Data ITP' : (myData ? '<i class="fas fa-save me-2"></i>Update Data ITP' : '<i class="fas fa-save me-2"></i>Simpan Data ITP');
+                    html += `<button onclick="submitItpData(${itp.id})" class="btn ${needsResubmit ? 'btn-warning' : 'btn-accent'} w-100 mb-2" id="submitBtn">${btnLabel}</button>`;
                 }
 
                 if (myData) {
@@ -481,11 +666,10 @@ function submitItpData(itpId) {
 }
 
 function accItpData(dataId) {
-    if (!confirm('Apakah Anda yakin ingin ACC (approve) data ITP ini?')) return;
+    if (!confirm('Apakah Anda yakin ingin ACC (approve) data ini?')) return;
 
-    const btn = document.getElementById('accBtn');
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Memproses...';
+    const btn = document.getElementById('accBtn-' + dataId) || document.getElementById('accBtn');
+    if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Memproses...'; }
 
     fetch(`/itp-data/${dataId}/approve`, {
         method: 'POST',
@@ -494,20 +678,64 @@ function accItpData(dataId) {
     .then(r => r.json())
     .then(res => {
         if (res.success) {
-            btn.innerHTML = '<i class="fas fa-shield-alt me-1"></i> ACC Berhasil!';
-            btn.style.background = 'linear-gradient(135deg, #3b82f6, #2563eb)';
+            if (btn) { btn.innerHTML = '<i class="fas fa-shield-alt me-1"></i> ACC Berhasil!'; btn.style.background = 'linear-gradient(135deg, #3b82f6, #2563eb)'; }
             setTimeout(() => { closeModal(); location.reload(); }, 800);
         } else {
             alert(res.message || 'Gagal ACC');
-            btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-shield-alt"></i> Tandai ACC (Approved)';
+            if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-check-circle"></i> ACC'; }
         }
     })
-    .catch(() => {
-        alert('Terjadi kesalahan');
-        btn.disabled = false;
-        btn.innerHTML = '<i class="fas fa-shield-alt"></i> Tandai ACC (Approved)';
-    });
+    .catch(() => { alert('Terjadi kesalahan'); if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-check-circle"></i> ACC'; } });
 }
+
+function showRejectForm(dataId) {
+    const form = document.getElementById('rejectForm-' + dataId);
+    if (form) form.style.display = form.style.display === 'none' ? 'block' : 'none';
+}
+
+function rejectItpData(dataId) {
+    const note = document.getElementById('rejectNote-' + dataId)?.value?.trim();
+    if (!note || note.length < 3) { alert('Alasan reject wajib diisi (minimal 3 karakter)'); return; }
+
+    const btn = document.getElementById('rejectBtn-' + dataId);
+    if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Memproses...'; }
+
+    fetch(`/itp-data/${dataId}/reject`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken },
+        body: JSON.stringify({ note: note }),
+    })
+    .then(r => r.json())
+    .then(res => {
+        if (res.success) {
+            if (btn) btn.innerHTML = '<i class="fas fa-check me-1"></i>Ditolak!';
+            setTimeout(() => { closeModal(); location.reload(); }, 800);
+        } else {
+            alert(res.message || 'Gagal reject');
+            if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-paper-plane me-1"></i>Kirim Reject'; }
+        }
+    })
+    .catch(() => { alert('Terjadi kesalahan'); if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-paper-plane me-1"></i>Kirim Reject'; } });
+}
+
+// Live Search Filter
+document.getElementById('searchInput')?.addEventListener('input', function(e) {
+    const term = e.target.value.toLowerCase();
+    const cards = document.querySelectorAll('.assembly-card');
+    
+    cards.forEach(card => {
+        const text = card.textContent.toLowerCase();
+        if (text.includes(term)) {
+            card.style.display = 'block';
+            const items = card.querySelectorAll('.code-row');
+            items.forEach(item => {
+                const itemText = item.textContent.toLowerCase();
+                item.style.display = itemText.includes(term) ? 'flex' : 'none';
+            });
+        } else {
+            card.style.display = 'none';
+        }
+    });
+});
 </script>
 @endsection

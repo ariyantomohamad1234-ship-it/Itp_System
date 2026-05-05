@@ -5,7 +5,7 @@
 @section('styles')
 <style>
     .page-header-card {
-        background: linear-gradient(135deg, #0f172a, #1e293b);
+        background: linear-gradient(135deg, #dc2626, #991b1b);
         border-radius: 1.25rem;
         padding: 1.5rem 2rem;
         color: #fff;
@@ -18,7 +18,7 @@
         position: absolute;
         top: -50%; right: -20%;
         width: 300px; height: 300px;
-        background: radial-gradient(circle, rgba(139,92,246,0.15) 0%, transparent 60%);
+        background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 60%);
         border-radius: 50%;
     }
     .page-header-card h4 { font-weight: 800; margin-bottom: 4px; position: relative; }
@@ -114,10 +114,10 @@
                 <div class="card-blok-footer">
                     <div class="d-flex justify-content-between align-items-center mb-1">
                         <span class="text-muted" style="font-size:0.65rem">{{ $bp['done'] }}/{{ $bp['total'] }} item</span>
-                        <span class="fw-bold {{ $bp['percent'] == 100 ? 'text-success' : 'text-primary' }}" style="font-size:0.7rem">{{ $bp['percent'] }}%</span>
+                        <span class="fw-bold {{ $bp['percent'] == 100 ? 'text-success' : 'text-danger' }}" style="font-size:0.7rem">{{ $bp['percent'] }}%</span>
                     </div>
                     <div class="progress-mini">
-                        <div class="fill {{ $bp['percent'] == 100 ? 'bg-success' : 'bg-primary' }}" style="width:{{ $bp['percent'] }}%"></div>
+                        <div class="fill {{ $bp['percent'] == 100 ? 'bg-success' : 'bg-danger' }}" style="width:{{ $bp['percent'] }}%"></div>
                     </div>
                 </div>
             </a>

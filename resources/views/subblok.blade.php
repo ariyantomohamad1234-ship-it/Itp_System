@@ -5,7 +5,7 @@
 @section('styles')
 <style>
     .page-header-card {
-        background: linear-gradient(135deg, #0f172a, #1e293b);
+        background: linear-gradient(135deg, #dc2626, #991b1b);
         border-radius: 1.25rem;
         padding: 1.5rem 2rem;
         color: #fff;
@@ -18,7 +18,7 @@
         position: absolute;
         top: -50%; right: -20%;
         width: 300px; height: 300px;
-        background: radial-gradient(circle, rgba(16,185,129,0.15) 0%, transparent 60%);
+        background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 60%);
         border-radius: 50%;
     }
     .page-header-card h4 { font-weight: 800; margin-bottom: 4px; position: relative; }

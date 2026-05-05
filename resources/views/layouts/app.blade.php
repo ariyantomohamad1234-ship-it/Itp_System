@@ -4,35 +4,35 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'ITP System') - Mini LNG</title>
+    <title>@yield('title', 'ITP Digital System')</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 
     <style>
         :root {
-            --primary: #0a0f1e;
-            --primary-light: #111827;
-            --accent: #3b82f6;
-            --accent-hover: #2563eb;
-            --accent-glow: rgba(59, 130, 246, 0.1);
-            --bg: #f0f4f8;
+            --primary: #dc2626; 
+            --primary-dark: #991b1b;
+            --accent: #ef4444;
+            --navy: #0f172a;
+            --bg: #f8fafc;
             --card: #ffffff;
-            --border: #e5e7eb;
-            --text: #111827;
-            --text-muted: #6b7280;
+            --border: #e2e8f0;
+            --text: #1e293b;
+            --text-muted: #64748b;
             --success: #10b981;
-            --warning: #f59e0b;
-            --danger: #ef4444;
+            --radius: 1.25rem;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --shadow-md: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
             --sidebar-w: 260px;
-            --radius: 1rem;
         }
 
         * { box-sizing: border-box; }
 
         body {
-            font-family: 'Inter', system-ui, sans-serif;
+            font-family: 'Outfit', system-ui, sans-serif;
             background: var(--bg);
             color: var(--text);
             margin: 0;
@@ -45,49 +45,127 @@
             left: 0; top: 0;
             width: var(--sidebar-w);
             height: 100vh;
-            background: linear-gradient(180deg, #0a0f1e 0%, #0f172a 40%, #131c33 100%);
+            background: var(--navy);
             color: #fff;
             z-index: 1000;
-            transition: transform 0.35s cubic-bezier(0.4,0,0.2,1);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             display: flex;
             flex-direction: column;
-            border-right: 1px solid rgba(255,255,255,0.04);
+            border-right: 1px solid rgba(255,255,255,0.05);
+        }
+
+        /* Collapsed state (desktop icon-only) */
+        .sidebar.collapsed {
+            width: 64px;
+        }
+        .sidebar-brand h4,
+        .sidebar-brand small,
+        .sidebar-nav a span,
+        .sidebar-nav .nav-label,
+        .sidebar-footer .btn-logout span {
+            transition: opacity 0.25s ease, max-width 0.25s ease;
+            opacity: 1;
+            max-width: 200px;
+            overflow: hidden;
+            white-space: nowrap;
+        }
+        .sidebar.collapsed .sidebar-brand h4,
+        .sidebar.collapsed .sidebar-brand small,
+        .sidebar.collapsed .sidebar-nav a span,
+        .sidebar.collapsed .sidebar-nav .nav-label,
+        .sidebar.collapsed .sidebar-footer .btn-logout span {
+            opacity: 0;
+            max-width: 0;
+            pointer-events: none;
+        }
+        .sidebar.collapsed .sidebar-brand {
+            padding: 1.25rem 0.5rem;
+        }
+        .brand-logo-icon { display: none; }
+        .sidebar.collapsed .brand-logo-full { display: none !important; }
+        .sidebar.collapsed .brand-logo-icon { display: block !important; margin: 0 auto; }
+        
+        .sidebar.collapsed .sidebar-nav a {
+            justify-content: center;
+            padding: 0.7rem 0;
+            position: relative;
+        }
+        .sidebar.collapsed .sidebar-nav a i {
+            margin-right: 0;
+            font-size: 1.1rem;
+        }
+        /* Tooltip on hover for collapsed sidebar */
+        .sidebar.collapsed .sidebar-nav a[title]:hover::after {
+            content: attr(title);
+            position: absolute;
+            left: 100%;
+            top: 50%;
+            transform: translateY(-50%);
+            margin-left: 8px;
+            background: #1e293b;
+            color: #fff;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            white-space: nowrap;
+            z-index: 2000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            pointer-events: none;
+        }
+        .sidebar.collapsed .sidebar-footer .btn-logout {
+            padding: 0.6rem;
+            justify-content: center;
+        }
+        .sidebar.collapsed + .sidebar-overlay + .main-content,
+        .sidebar.collapsed + .main-content {
+            margin-left: 64px;
+        }
+
+        /* Mobile sidebar overlay */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(15,23,42,0.5);
+            backdrop-filter: blur(2px);
+            z-index: 999;
+            transition: opacity 0.3s ease;
+        }
+        .sidebar-overlay.active {
+            display: block;
         }
 
         .sidebar-brand {
-            padding: 1.75rem 1.5rem;
-            border-bottom: 1px solid rgba(255,255,255,0.06);
-            text-align: center;
+            padding: 2.5rem 1.5rem;
+            text-align: left;
             position: relative;
-        }
-
-        .sidebar-brand::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 20%;
-            width: 60%;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, rgba(59,130,246,0.4), transparent);
         }
 
         .sidebar-brand h4 {
             margin: 0;
-            font-weight: 900;
-            letter-spacing: 2px;
-            background: linear-gradient(135deg, #38bdf8, #818cf8, #c084fc);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            font-size: 1.25rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            color: #ffffff;
+            font-size: 1.4rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .sidebar-brand h4 i {
+            color: var(--primary);
+            font-size: 1.6rem;
         }
 
         .sidebar-brand small {
             display: block;
-            color: #475569;
-            font-size: 0.6rem;
-            letter-spacing: 3.5px;
+            color: rgba(255,255,255,0.5);
+            font-size: 0.65rem;
+            letter-spacing: 1px;
+            font-weight: 600;
             text-transform: uppercase;
-            margin-top: 6px;
+            margin-top: 4px;
         }
 
         .sidebar-nav {
@@ -102,33 +180,42 @@
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 2.5px;
-            color: #374151;
+            color: rgba(255,255,255,0.4);
         }
 
         .sidebar-nav a {
             display: flex;
             align-items: center;
-            padding: 0.7rem 1.5rem;
-            color: #64748b;
+            padding: 0.85rem 1.5rem;
+            color: rgba(255,255,255,0.6);
             text-decoration: none;
             font-weight: 500;
-            font-size: 0.85rem;
-            border-left: 3px solid transparent;
-            transition: all 0.25s;
-            margin: 2px 0;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+            margin: 4px 12px;
+            border-radius: 1rem;
+        }
+
+        .sidebar-nav a:hover {
+            color: #fff;
+            background: rgba(255,255,255,0.05);
+        }
+
+        .sidebar-nav a.active {
+            color: #fff;
+            background: var(--primary);
+            box-shadow: 0 10px 20px rgba(220, 38, 38, 0.2);
+            font-weight: 700;
         }
 
         .sidebar-nav a i {
-            width: 20px;
+            width: 24px;
             margin-right: 12px;
-            font-size: 0.95rem;
+            font-size: 1.1rem;
             text-align: center;
         }
 
-        .sidebar-nav a:hover, .sidebar-nav a.active {
-            color: #fff;
-            background: linear-gradient(90deg, rgba(59,130,246,0.1), transparent);
-            border-left-color: #3b82f6;
+            border-left-color: #fff;
         }
 
         .sidebar-nav a.active {
@@ -171,16 +258,18 @@
         }
 
         .topbar {
-            background: rgba(255,255,255,0.8);
-            backdrop-filter: blur(12px);
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
             padding: 0.875rem 1.5rem;
-            border-bottom: 1px solid var(--border);
+            border-bottom: 1px solid rgba(226, 232, 240, 0.5);
             display: flex;
             justify-content: space-between;
             align-items: center;
             position: sticky;
             top: 0;
             z-index: 100;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
         }
 
         .topbar-title {
@@ -198,14 +287,14 @@
         .user-avatar {
             width: 38px; height: 38px;
             border-radius: 0.75rem;
-            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            background: linear-gradient(135deg, #dc2626, #ef4444);
             color: #fff;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: 700;
             font-size: 0.85rem;
-            box-shadow: 0 4px 12px rgba(59,130,246,0.25);
+            box-shadow: 0 4px 12px rgba(220, 38, 38, 0.15);
         }
 
         .role-badge {
@@ -217,14 +306,17 @@
             border-radius: 6px;
         }
 
-        .role-admin { background: #fef3c7; color: #92400e; }
-        .role-yard { background: #dbeafe; color: #1e40af; }
-        .role-class { background: #dcfce7; color: #166534; }
-        .role-os { background: #f3e8ff; color: #7c3aed; }
-        .role-stat { background: #ffe4e6; color: #be123c; }
+        .role-admin { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+        .role-yard { background: #fef2f2; color: #dc2626; border: 1px solid #fee2e2; }
+        .role-class { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+        .role-os { background: #f3e8ff; color: #7c3aed; border: 1px solid #e9d5ff; }
+        .role-stat { background: #ffe4e6; color: #be123c; border: 1px solid #fecaca; }
 
         .page-content {
             padding: 1.5rem;
+            padding-left: 2rem;
+            box-sizing: border-box;
+            width: 100%;
         }
 
         /* ===== CARDS ===== */
@@ -232,23 +324,26 @@
             background: var(--card);
             border: 1px solid var(--border);
             border-radius: var(--radius);
-            padding: 1.5rem;
-            transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+            padding: 1.75rem;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: var(--shadow-sm);
         }
 
         .stat-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 12px 28px -6px rgba(0,0,0,0.08);
+            transform: translateY(-6px);
+            box-shadow: var(--shadow-md);
+            border-color: rgba(220, 38, 38, 0.2);
         }
 
         .stat-icon {
-            width: 48px; height: 48px;
-            border-radius: 12px;
+            width: 52px; height: 52px;
+            border-radius: 14px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.25rem;
-            margin-bottom: 1rem;
+            font-size: 1.4rem;
+            margin-bottom: 1.25rem;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
         }
 
         .content-card {
@@ -256,35 +351,43 @@
             border: 1px solid var(--border);
             border-radius: var(--radius);
             overflow: hidden;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+            box-shadow: var(--shadow-sm);
+            transition: box-shadow 0.3s;
+        }
+
+        .content-card:hover {
+            box-shadow: var(--shadow);
         }
 
         .content-card-header {
-            padding: 1.25rem 1.5rem;
+            padding: 1.5rem 2rem;
+            background: #fff;
             border-bottom: 1px solid var(--border);
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
 
-        .content-card-body { padding: 1.5rem; }
+        .content-card-body { padding: 2rem; }
 
         /* ===== BUTTONS ===== */
         .btn-accent {
-            background: linear-gradient(135deg, #3b82f6, #6366f1);
+            background: var(--primary);
             color: #fff;
             border: none;
-            border-radius: 0.625rem;
-            font-weight: 600;
-            padding: 0.5rem 1.25rem;
-            transition: all 0.25s;
+            border-radius: 0.875rem;
+            font-weight: 700;
+            padding: 0.75rem 1.75rem;
+            transition: all 0.3s;
             font-size: 0.85rem;
+            box-shadow: 0 4px 12px rgba(220, 38, 38, 0.2);
         }
 
         .btn-accent:hover {
+            background: var(--primary-dark);
             color: #fff;
             transform: translateY(-2px);
-            box-shadow: 0 6px 18px rgba(59,130,246,0.3);
+            box-shadow: 0 8px 20px rgba(220, 38, 38, 0.3);
         }
 
         .btn-back {
@@ -348,6 +451,7 @@
             .sidebar { transform: translateX(-100%); }
             .sidebar.open { transform: translateX(0); }
             .main-content { margin-left: 0; }
+            .sidebar.collapsed + .sidebar-overlay + .main-content { margin-left: 0; }
         }
 
         /* ===== ANIMATIONS ===== */
@@ -358,20 +462,36 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* ===== DEADLINE BADGE ===== */
-        .deadline-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            font-size: 0.7rem;
-            font-weight: 600;
-            padding: 3px 8px;
-            border-radius: 6px;
+        /* ===== SKELETON LOADING ===== */
+        .skeleton {
+            background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+            background-size: 200% 100%;
+            animation: skeleton-loading 1.5s infinite;
+            border-radius: 0.5rem;
         }
-        .deadline-ok { background: #dcfce7; color: #166534; }
-        .deadline-warn { background: #fef3c7; color: #92400e; }
-        .deadline-danger { background: #fee2e2; color: #991b1b; }
-        .deadline-over { background: #ef4444; color: #fff; }
+
+        @keyframes skeleton-loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        /* ===== RESPONSIVE TABLES ===== */
+        .table-responsive-custom {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            padding-bottom: 0.5rem;
+        }
+
+        .table-responsive-custom::-webkit-scrollbar { height: 4px; }
+        .table-responsive-custom::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+
+        html { scroll-behavior: smooth; }
+
+        /* ===== TOUCH OPTIMIZATION ===== */
+        @media (max-width: 576px) {
+            .btn, .sidebar-nav a, .nav-item { min-height: 44px; display: flex; align-items: center; }
+            .page-content { padding: 1rem; }
+        }
     </style>
     @yield('styles')
 </head>
@@ -380,54 +500,69 @@
 
     <!-- SIDEBAR -->
     <div class="sidebar" id="sidebar">
-        <div class="sidebar-brand">
-            <h4>ITP SYSTEM</h4>
-            <small>Mini LNG Vessel</small>
+        <div class="sidebar-brand" style="display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding: 2rem 1rem 1rem;">
+            <img src="{{ asset('assets/images/brin-logo.png') }}" class="brand-logo-full" style="max-width: 140px; height: auto;" alt="BRIN Logo">
+            <img src="{{ asset('assets/images/brin-icon.png') }}" class="brand-logo-icon" style="max-width: 38px; height: auto;" alt="BRIN Icon">
+            <small class="mt-2 text-white-50" style="font-size: 0.65rem; letter-spacing: 1px;">ITP SYSTEM</small>
         </div>
 
         <nav class="sidebar-nav">
             @if($user->role === 'admin')
-                <div class="nav-label">Management</div>
-                <a href="/admin/dashboard" class="{{ request()->is('admin/dashboard') ? 'active' : '' }}">
-                    <i class="fas fa-chart-pie"></i> Dashboard
+                <div class="nav-label"><span>Management</span></div>
+                <a href="/admin/dashboard" title="Dashboard" class="{{ request()->is('admin/dashboard') ? 'active' : '' }}">
+                    <i class="fas fa-chart-pie"></i> <span>Dashboard</span>
                 </a>
-                <a href="/admin/users/create" class="{{ request()->is('admin/users*') ? 'active' : '' }}">
-                    <i class="fas fa-user-plus"></i> Buat Akun
+                <a href="/admin/users/create" title="Buat Akun" class="{{ request()->is('admin/users*') ? 'active' : '' }}">
+                    <i class="fas fa-user-plus"></i> <span>Buat Akun</span>
                 </a>
-                <a href="/admin/projects/create" class="{{ request()->is('admin/projects/create') ? 'active' : '' }}">
-                    <i class="fas fa-rocket"></i> Start Project
+                <a href="/admin/projects/create" title="Start Project" class="{{ request()->is('admin/projects/create') ? 'active' : '' }}">
+                    <i class="fas fa-rocket"></i> <span>Start Project</span>
+                </a>
+                <a href="/admin/logs" title="System Logs" class="{{ request()->is('admin/logs*') ? 'active' : '' }}">
+                    <i class="fas fa-list-alt"></i> <span>System Logs</span>
                 </a>
             @else
-                <div class="nav-label">Navigasi</div>
-                <a href="/dashboard" class="{{ request()->is('dashboard') ? 'active' : '' }}">
-                    <i class="fas fa-th-large"></i> Pilih Project
+                <div class="nav-label"><span>Navigasi</span></div>
+                <a href="/dashboard" title="Pilih Project" class="{{ request()->is('dashboard') ? 'active' : '' }}">
+                    <i class="fas fa-th-large"></i> <span>Pilih Project</span>
                 </a>
             @endif
 
-            <div class="nav-label">Komunikasi</div>
-            <a href="/messages" class="{{ request()->is('messages*') ? 'active' : '' }}" style="position:relative">
-                <i class="fas fa-comments"></i> Pesan
-                <span id="msgBadge" style="display:none;position:absolute;right:12px;top:50%;transform:translateY(-50%);background:#ef4444;color:#fff;font-size:0.5rem;font-weight:700;width:18px;height:18px;border-radius:50%;display:none;align-items:center;justify-content:center"></span>
+            <div class="nav-label"><span>Komunikasi</span></div>
+            <a href="/notifications" title="Notifikasi" class="{{ request()->is('notifications*') ? 'active' : '' }}" style="position:relative">
+                <i class="fas fa-bell"></i> <span>Notifikasi</span>
+                <span id="notifSidebarBadge" style="display:none;position:absolute;right:12px;top:50%;transform:translateY(-50%);background:#ef4444;color:#fff;font-size:0.5rem;font-weight:700;width:18px;height:18px;border-radius:50%;align-items:center;justify-content:center"></span>
+            </a>
+            <a href="/messages" title="Pesan" class="{{ request()->is('messages*') ? 'active' : '' }}" style="position:relative">
+                <i class="fas fa-comments"></i> <span>Pesan</span>
+                <span id="msgBadge" style="display:none;position:absolute;right:12px;top:50%;transform:translateY(-50%);background:#ef4444;color:#fff;font-size:0.5rem;font-weight:700;width:18px;height:18px;border-radius:50%;align-items:center;justify-content:center"></span>
             </a>
         </nav>
 
         <div class="sidebar-footer">
-            <a href="/logout" class="btn-logout">
-                <i class="fas fa-sign-out-alt"></i>Logout
+            <a href="/logout" title="Logout" class="btn-logout">
+                <i class="fas fa-sign-out-alt"></i><span>Logout</span>
             </a>
         </div>
     </div>
+
+    <!-- SIDEBAR OVERLAY (mobile) -->
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
 
     <!-- MAIN -->
     <div class="main-content">
         <div class="topbar">
             <div class="d-flex align-items-center gap-3">
-                <button class="btn btn-link d-lg-none text-dark p-0" onclick="document.getElementById('sidebar').classList.toggle('open')">
+                <button class="btn btn-link text-dark p-0" id="sidebarToggleBtn" onclick="toggleSidebar()">
                     <i class="fas fa-bars"></i>
                 </button>
                 <span class="topbar-title">@yield('page-title', 'Dashboard')</span>
             </div>
             <div class="user-info">
+                <a href="/notifications" class="position-relative me-2" style="color:var(--text-muted);font-size:1.1rem" title="Notifikasi">
+                    <i class="fas fa-bell"></i>
+                    <span id="notifTopBadge" style="display:none;position:absolute;top:-4px;right:-6px;background:#ef4444;color:#fff;font-size:0.5rem;font-weight:700;min-width:16px;height:16px;border-radius:50%;align-items:center;justify-content:center;padding:0 3px"></span>
+                </a>
                 <div class="text-end d-none d-sm-block">
                     <div class="fw-bold" style="font-size:0.85rem">{{ $user->name }}</div>
                     <span class="role-badge role-{{ $user->role }}">{{ strtoupper($user->role) }}</span>
@@ -456,13 +591,24 @@
 
     <!-- Global Toast Container -->
     <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1055;">
-        <div id="msgToast" class="toast align-items-center text-bg-primary border-0" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="5000">
+        <div id="msgToast" class="toast align-items-center text-bg-danger border-0" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="5000">
             <div class="d-flex">
                 <div class="toast-body" style="font-size:0.85rem">
-                    <strong><i class="fas fa-bell me-2"></i>Pesan Baru</strong><br>
+                    <strong><i class="fas fa-comments me-2"></i>Pesan Baru</strong><br>
                     <span id="msgToastSender" class="fw-bold d-block mt-1"></span>
                     <span id="msgToastText" class="text-truncate d-block" style="max-width:200px"></span>
                     <a href="/messages" class="btn btn-sm btn-light mt-2 py-1 px-3 text-primary fw-bold" style="font-size:0.75rem">Lihat</a>
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        </div>
+        <!-- Notification Toast -->
+        <div id="notifToast" class="toast align-items-center border-0" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="6000" style="background:linear-gradient(135deg,#dc2626,#991b1b);color:#fff">
+            <div class="d-flex">
+                <div class="toast-body" style="font-size:0.85rem">
+                    <strong><i class="fas fa-bell me-2" id="notifToastIcon"></i><span id="notifToastTitle">Notifikasi Baru</span></strong><br>
+                    <span id="notifToastMsg" class="d-block mt-1" style="max-width:250px;font-size:0.8rem;color:#cbd5e1"></span>
+                    <a href="/notifications" class="btn btn-sm mt-2 py-1 px-3 fw-bold" style="font-size:0.75rem;background:rgba(59,130,246,0.2);color:#93c5fd;border:1px solid rgba(59,130,246,0.3);border-radius:0.5rem">Lihat Semua</a>
                 </div>
                 <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
             </div>
@@ -508,14 +654,89 @@
                 .catch(err => console.error('Poll error', err));
         }
 
+        // === Notification Polling ===
+        const notifTopBadge = document.getElementById('notifTopBadge');
+        const notifSidebarBadge = document.getElementById('notifSidebarBadge');
+        const notifToastEl = document.getElementById('notifToast');
+        const notifToast = new bootstrap.Toast(notifToastEl);
+        const notifStorageKey = 'last_notif_id_user_' + {{ session('user') ? session('user')->id : 0 }};
+        let globalLastNotifId = parseInt(localStorage.getItem(notifStorageKey) || '0');
+
+        function checkNotifications() {
+            fetch('/notifications/unread-count')
+                .then(r => r.json())
+                .then(res => {
+                    if (res.count > 0) {
+                        const label = res.count > 99 ? '99+' : res.count;
+                        if (notifTopBadge) { notifTopBadge.style.display = 'flex'; notifTopBadge.innerText = label; }
+                        if (notifSidebarBadge) { notifSidebarBadge.style.display = 'flex'; notifSidebarBadge.innerText = label; }
+                    } else {
+                        if (notifTopBadge) notifTopBadge.style.display = 'none';
+                        if (notifSidebarBadge) notifSidebarBadge.style.display = 'none';
+                    }
+
+                    // Show toast for new notifications
+                    if (res.latest_id > 0 && res.latest_id > globalLastNotifId && res.latest) {
+                        const typeIcons = {
+                            submit: 'fa-file-upload',
+                            approved: 'fa-check-circle',
+                            needs_revision: 'fa-times-circle',
+                            rejected: 'fa-times-circle'
+                        };
+                        const iconEl = document.getElementById('notifToastIcon');
+                        iconEl.className = 'fas ' + (typeIcons[res.latest.type] || 'fa-bell') + ' me-2';
+                        document.getElementById('notifToastTitle').innerText = res.latest.title || 'Notifikasi Baru';
+                        document.getElementById('notifToastMsg').innerText = res.latest.message || '';
+                        notifToast.show();
+
+                        globalLastNotifId = res.latest_id;
+                        localStorage.setItem(notifStorageKey, res.latest_id);
+                    }
+                })
+                .catch(() => {});
+        }
+
         // Only poll if user is logged in
         @if(session()->has('user'))
-            setInterval(checkNewMessages, 5000); // Check every 5 seconds
-            // Initial check
+            setInterval(checkNewMessages, 5000);
+            setInterval(checkNotifications, 6000);
             setTimeout(checkNewMessages, 1000);
+            setTimeout(checkNotifications, 1500);
         @endif
     </script>
     
     @yield('scripts')
+
+    <script>
+        // Sidebar collapse toggle
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            const isMobile = window.innerWidth <= 992;
+            if (isMobile) {
+                const isOpen = sidebar.classList.toggle('open');
+                if (overlay) overlay.classList.toggle('active', isOpen);
+            } else {
+                sidebar.classList.toggle('collapsed');
+                localStorage.setItem('sidebar_collapsed', sidebar.classList.contains('collapsed') ? '1' : '0');
+            }
+        }
+
+        // Close sidebar (called by overlay click)
+        function closeSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            sidebar.classList.remove('open');
+            if (overlay) overlay.classList.remove('active');
+        }
+
+        // Restore sidebar state on page load
+        (function() {
+            const collapsed = localStorage.getItem('sidebar_collapsed');
+            if (collapsed === '1' && window.innerWidth > 992) {
+                document.getElementById('sidebar').classList.add('collapsed');
+            }
+        })();
+    </script>
 </body>
 </html>

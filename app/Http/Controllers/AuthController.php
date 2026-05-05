@@ -12,7 +12,7 @@ class AuthController extends Controller
     {
         if (session('login')) {
             $user = session('user');
-            if ($user->role === 'admin') {
+            if (in_array($user->role, ['admin', 'admin_galangan'])) {
                 return redirect('/admin/dashboard');
             }
             return redirect('/dashboard');
@@ -32,7 +32,7 @@ class AuthController extends Controller
                 'user' => $user
             ]);
 
-            if ($user->role === 'admin') {
+            if (in_array($user->role, ['admin', 'admin_galangan'])) {
                 return redirect('/admin/dashboard');
             }
             return redirect('/dashboard');

@@ -6,13 +6,18 @@ use Illuminate\Database\Eloquent\Model;
 
 class Project extends Model
 {
-    protected $fillable = ['nama_project', 'kode_project', 'deskripsi', 'status', 'tanggal_kontrak', 'tanggal_mulai', 'deadline'];
+    protected $fillable = ['nama_project', 'kode_project', 'deskripsi', 'status', 'template_id', 'tanggal_kontrak', 'tanggal_mulai', 'deadline'];
 
     protected $casts = [
         'tanggal_kontrak' => 'date',
         'tanggal_mulai' => 'date',
         'deadline' => 'date',
     ];
+
+    public function template()
+    {
+        return $this->belongsTo(ProjectTemplate::class, 'template_id');
+    }
 
     public function moduls()
     {

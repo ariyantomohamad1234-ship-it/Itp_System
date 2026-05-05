@@ -9,13 +9,23 @@ class User extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'username', 'password', 'role'];
+    protected $fillable = ['name', 'username', 'password', 'role', 'phone'];
 
     protected $hidden = ['password'];
 
     public function isAdmin(): bool
     {
+        return $this->role === 'admin' || $this->role === 'admin_galangan';
+    }
+
+    public function isSuperAdmin(): bool
+    {
         return $this->role === 'admin';
+    }
+
+    public function isAdminGalangan(): bool
+    {
+        return $this->role === 'admin_galangan';
     }
 
     public function isYard(): bool
