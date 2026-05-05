@@ -48,10 +48,18 @@
             background: var(--navy);
             color: #fff;
             z-index: 1000;
+<<<<<<< HEAD
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             display: flex;
             flex-direction: column;
             border-right: 1px solid rgba(255,255,255,0.05);
+=======
+            transition: width 0.35s cubic-bezier(0.4,0,0.2,1), transform 0.35s cubic-bezier(0.4,0,0.2,1);
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid rgba(255,255,255,0.04);
+            overflow: hidden;
+>>>>>>> 686ff83021b22abebb231249e1d8bddfbadec271
         }
 
         /* Collapsed state (desktop icon-only) */
@@ -81,10 +89,13 @@
         .sidebar.collapsed .sidebar-brand {
             padding: 1.25rem 0.5rem;
         }
+<<<<<<< HEAD
         .brand-logo-icon { display: none; }
         .sidebar.collapsed .brand-logo-full { display: none !important; }
         .sidebar.collapsed .brand-logo-icon { display: block !important; margin: 0 auto; }
         
+=======
+>>>>>>> 686ff83021b22abebb231249e1d8bddfbadec271
         .sidebar.collapsed .sidebar-nav a {
             justify-content: center;
             padding: 0.7rem 0;
@@ -517,9 +528,12 @@
                 </a>
                 <a href="/admin/projects/create" title="Start Project" class="{{ request()->is('admin/projects/create') ? 'active' : '' }}">
                     <i class="fas fa-rocket"></i> <span>Start Project</span>
+<<<<<<< HEAD
                 </a>
                 <a href="/admin/logs" title="System Logs" class="{{ request()->is('admin/logs*') ? 'active' : '' }}">
                     <i class="fas fa-list-alt"></i> <span>System Logs</span>
+=======
+>>>>>>> 686ff83021b22abebb231249e1d8bddfbadec271
                 </a>
             @else
                 <div class="nav-label"><span>Navigasi</span></div>
@@ -603,7 +617,11 @@
             </div>
         </div>
         <!-- Notification Toast -->
+<<<<<<< HEAD
         <div id="notifToast" class="toast align-items-center border-0" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="6000" style="background:linear-gradient(135deg,#dc2626,#991b1b);color:#fff">
+=======
+        <div id="notifToast" class="toast align-items-center border-0" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="6000" style="background:linear-gradient(135deg,#1e293b,#334155);color:#fff">
+>>>>>>> 686ff83021b22abebb231249e1d8bddfbadec271
             <div class="d-flex">
                 <div class="toast-body" style="font-size:0.85rem">
                     <strong><i class="fas fa-bell me-2" id="notifToastIcon"></i><span id="notifToastTitle">Notifikasi Baru</span></strong><br>

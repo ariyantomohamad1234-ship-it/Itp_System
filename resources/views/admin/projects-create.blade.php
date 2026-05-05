@@ -68,8 +68,13 @@
 @section('content')
 <div class="fade-up">
     <div class="row justify-content-center">
+<<<<<<< HEAD
         <div class="col-lg-8">
             <a href="/admin/dashboard" class="btn-back mb-4 d-inline-flex"><i class="fas fa-arrow-left"></i> Kembali ke Dashboard</a>
+=======
+        <div class="col-lg-7">
+            <a href="/admin/dashboard" class="btn-back mb-3 d-inline-flex"><i class="fas fa-arrow-left"></i> Kembali</a>
+>>>>>>> 686ff83021b22abebb231249e1d8bddfbadec271
 
             <div class="premium-form-card">
                 <div class="text-center mb-4">
@@ -122,26 +127,94 @@
                         </div>
                     </div>
 
+<<<<<<< HEAD
                     <div class="row g-3 mb-4">
                         <div class="col-md-6">
                             <label class="form-label-premium">Nama Project</label>
                             <input type="text" name="nama_project" class="form-control form-control-premium" value="{{ old('nama_project') }}" required placeholder="Contoh: Mini LNG Vessel Hull 001">
+=======
+                    {{-- MODE SELECTOR --}}
+                    <label class="form-label fw-bold" style="font-size:0.85rem">
+                        <i class="fas fa-cogs me-1 text-primary"></i>Mode Pembuatan Project
+                    </label>
+                    <div class="mode-selector">
+                        <div class="mode-card active" id="mode-template" onclick="setMode('template')">
+                            <span class="mode-icon">📋</span>
+                            <div class="mode-title">Dari Template</div>
+                            <div class="mode-desc">Struktur modul, blok, sub-blok & ITP otomatis di-generate</div>
+                        </div>
+                        <div class="mode-card" id="mode-manual" onclick="setMode('manual')">
+                            <span class="mode-icon">✏️</span>
+                            <div class="mode-title">Custom / Manual</div>
+                            <div class="mode-desc">Buat project kosong, isi data secara manual</div>
+                        </div>
+                    </div>
+
+                    <form action="/admin/projects" method="POST">
+                        @csrf
+
+                        {{-- TEMPLATE SELECTOR --}}
+                        <div class="template-select-wrapper mb-3" id="template-section">
+                            <label class="form-label fw-bold" style="font-size:0.85rem">
+                                <i class="fas fa-layer-group me-1 text-success"></i>Pilih Template
+                            </label>
+                            <select name="template_id" id="template_id" class="form-select">
+                                <option value="">-- Pilih Template --</option>
+                                @foreach($templates as $t)
+                                    <option value="{{ $t->id }}" {{ old('template_id') == $t->id ? 'selected' : '' }}>
+                                        {{ $t->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            <div class="template-info" id="template-info" style="display:none">
+                                <i class="fas fa-check-circle me-1"></i>
+                                <span id="template-info-text"></span>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold" style="font-size:0.85rem">Nama Project</label>
+                            <input type="text" name="nama_project" class="form-control" value="{{ old('nama_project') }}" required placeholder="Contoh: Mini LNG Vessel Hull 001">
+>>>>>>> 686ff83021b22abebb231249e1d8bddfbadec271
                         </div>
                         <div class="col-md-6">
                             <label class="form-label-premium">Kode Project</label>
                             <input type="text" name="kode_project" class="form-control form-control-premium" value="{{ old('kode_project') }}" required placeholder="Contoh: LNG-001">
                         </div>
+<<<<<<< HEAD
                     </div>
 
                     <div class="row g-3 mb-4">
                         <div class="col-md-4">
                             <label class="form-label-premium">Tgl Kontrak</label>
                             <input type="date" name="tanggal_kontrak" class="form-control form-control-premium" value="{{ old('tanggal_kontrak') }}">
+=======
+                        <div class="row g-3 mb-3">
+                            <div class="col-4">
+                                <label class="form-label fw-bold" style="font-size:0.85rem">Tanggal Kontrak</label>
+                                <input type="date" name="tanggal_kontrak" class="form-control" value="{{ old('tanggal_kontrak') }}">
+                            </div>
+                            <div class="col-4">
+                                <label class="form-label fw-bold" style="font-size:0.85rem">Tanggal Mulai</label>
+                                <input type="date" name="tanggal_mulai" id="tanggal_mulai" class="form-control" value="{{ old('tanggal_mulai') }}">
+                            </div>
+                            <div class="col-4">
+                                <label class="form-label fw-bold" style="font-size:0.85rem">Deadline <span class="text-danger">*</span></label>
+                                <input type="date" name="deadline" id="deadline" class="form-control" value="{{ old('deadline') }}">
+                            </div>
+                        </div>
+                        <div id="deadline-warning" class="mb-3" style="display:none">
+                            <div style="background:#fef3c7;border:1px solid #fbbf24;border-radius:0.5rem;padding:0.6rem 1rem;font-size:0.8rem;color:#92400e">
+                                <i class="fas fa-exclamation-triangle me-1"></i>
+                                <span id="deadline-warning-text"></span>
+                            </div>
+>>>>>>> 686ff83021b22abebb231249e1d8bddfbadec271
                         </div>
                         <div class="col-md-4">
                             <label class="form-label-premium">Tgl Mulai</label>
                             <input type="date" name="tanggal_mulai" id="tanggal_mulai" class="form-control form-control-premium" value="{{ old('tanggal_mulai') }}">
                         </div>
+<<<<<<< HEAD
                         <div class="col-md-4">
                             <label class="form-label-premium">Deadline <span class="text-danger">*</span></label>
                             <input type="date" name="deadline" id="deadline" class="form-control form-control-premium" value="{{ old('deadline') }}">
@@ -164,6 +237,13 @@
                         <i class="fas fa-rocket me-2"></i> Jalankan Project (Template)
                     </button>
                 </form>
+=======
+                        <button type="submit" class="btn btn-accent w-100" id="submit-btn">
+                            <i class="fas fa-rocket me-2"></i>Start Project dari Template
+                        </button>
+                    </form>
+                </div>
+>>>>>>> 686ff83021b22abebb231249e1d8bddfbadec271
             </div>
         </div>
     </div>

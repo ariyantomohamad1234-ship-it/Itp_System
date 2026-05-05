@@ -31,8 +31,13 @@
         transform: translateX(4px);
     }
     .notif-item.unread {
+<<<<<<< HEAD
         border-left: 3px solid #dc2626;
         background: rgba(220, 38, 38, 0.03);
+=======
+        border-left: 3px solid var(--accent);
+        background: rgba(59,130,246,0.03);
+>>>>>>> 686ff83021b22abebb231249e1d8bddfbadec271
     }
     .notif-icon {
         width: 40px; height: 40px;
@@ -43,7 +48,11 @@
         font-size: 1rem;
         flex-shrink: 0;
     }
+<<<<<<< HEAD
     .notif-icon.submit { background: #fee2e2; color: #dc2626; }
+=======
+    .notif-icon.submit { background: #dbeafe; color: #1e40af; }
+>>>>>>> 686ff83021b22abebb231249e1d8bddfbadec271
     .notif-icon.approved { background: #dcfce7; color: #166534; }
     .notif-icon.needs_revision, .notif-icon.rejected { background: #fee2e2; color: #991b1b; }
     .notif-body { flex: 1; min-width: 0; }
@@ -74,7 +83,11 @@
 @section('content')
 <div class="fade-up">
     <div class="notif-header">
+<<<<<<< HEAD
         <h5 class="fw-bold mb-0"><i class="fas fa-bell me-2 text-danger"></i>Semua Notifikasi</h5>
+=======
+        <h5 class="fw-bold mb-0"><i class="fas fa-bell me-2 text-primary"></i>Semua Notifikasi</h5>
+>>>>>>> 686ff83021b22abebb231249e1d8bddfbadec271
         <button class="btn btn-accent btn-sm" onclick="markAllRead()" id="markAllBtn">
             <i class="fas fa-check-double me-1"></i>Tandai Semua Dibaca
         </button>

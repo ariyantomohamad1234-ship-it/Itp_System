@@ -27,12 +27,18 @@
         display: inline-flex;
         align-items: center;
         gap: 6px;
+<<<<<<< HEAD
         background: rgba(255,255,255,0.15);
         border: 1px solid rgba(255,255,255,0.3);
+=======
+        background: rgba(59,130,246,0.15);
+        border: 1px solid rgba(59,130,246,0.3);
+>>>>>>> 686ff83021b22abebb231249e1d8bddfbadec271
         padding: 4px 12px;
         border-radius: 2rem;
         font-size: 0.75rem;
         font-weight: 700;
+<<<<<<< HEAD
         color: #fff;
     }
 
@@ -77,6 +83,10 @@
     }
 
     /* === MODULE CARD === */
+=======
+        color: #93c5fd;
+    }
+>>>>>>> 686ff83021b22abebb231249e1d8bddfbadec271
     .card-modul {
         background: var(--card);
         border: 1px solid var(--border);
@@ -102,6 +112,7 @@
         box-shadow: 0 15px 35px -8px rgba(220,38,38,0.15);
         border-color: var(--accent);
     }
+<<<<<<< HEAD
     .card-modul.state-active::before {
         content: '';
         position: absolute;
@@ -139,6 +150,18 @@
         background: #fafbfc;
     }
 
+=======
+    .card-modul.locked {
+        opacity: 0.65;
+        pointer-events: none;
+        filter: grayscale(0.3);
+    }
+    .card-modul.locked:hover {
+        transform: none;
+        box-shadow: none;
+        border-color: var(--border);
+    }
+>>>>>>> 686ff83021b22abebb231249e1d8bddfbadec271
     .card-modul-body {
         padding: 1.5rem;
         flex: 1;
@@ -154,6 +177,7 @@
         margin-bottom: 1rem;
         transition: all 0.3s;
     }
+<<<<<<< HEAD
     .modul-icon i { font-size: 1.15rem; }
 
     /* Icon colors by state */
@@ -171,6 +195,16 @@
     .modul-icon.icon-locked { background: #f3f4f6; }
     .modul-icon.icon-locked i { color: #9ca3af; }
 
+=======
+    .modul-icon i { font-size: 1.15rem; color: var(--accent); }
+    .card-modul:not(.locked):hover .modul-icon {
+        background: var(--accent);
+        transform: scale(1.1);
+    }
+    .card-modul:not(.locked):hover .modul-icon i { color: #fff; }
+    .modul-icon.locked-icon { background: #fef3c7; }
+    .modul-icon.locked-icon i { color: #92400e; }
+>>>>>>> 686ff83021b22abebb231249e1d8bddfbadec271
     .modul-number {
         font-size: 0.55rem;
         font-weight: 700;
@@ -242,11 +276,26 @@
         border-top: 1px solid var(--border);
         background: #fafbfc;
     }
+<<<<<<< HEAD
 
+=======
+    .lock-label {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.7rem;
+        color: #92400e;
+        font-weight: 600;
+        background: #fef3c7;
+        padding: 4px 10px;
+        border-radius: 0.5rem;
+    }
+>>>>>>> 686ff83021b22abebb231249e1d8bddfbadec271
     .schedule-badge {
         font-size: 0.6rem;
         font-weight: 600;
         color: var(--text-muted);
+<<<<<<< HEAD
         margin-top: 6px;
         display: flex;
         align-items: center;
@@ -260,6 +309,9 @@
         .card-modul-body { padding: 1.25rem; }
         .card-modul-footer { padding: 0.75rem 1.25rem; }
         .modul-name { font-size: 0.9rem; }
+=======
+        margin-top: 4px;
+>>>>>>> 686ff83021b22abebb231249e1d8bddfbadec271
     }
 </style>
 @endsection
@@ -297,6 +349,7 @@
         </div>
     </div>
 
+<<<<<<< HEAD
     @php
         // Group modules by phase for display
         $lastPhase = null;
@@ -367,6 +420,39 @@
                         <i class="fas fa-lock"></i>
                     @else
                         <i class="fas fa-box-archive"></i>
+=======
+    <div class="row g-4" id="modul-grid">
+        @forelse($modul as $m)
+        @php
+            $mp = $modulProgress[$m->id] ?? ['total' => 0, 'done' => 0, 'percent' => 0];
+            $lock = $modulLock[$m->id] ?? ['locked' => false, 'unlock_date' => null];
+            $isLocked = $lock['locked'];
+        @endphp
+        <div class="col-6 col-md-4 col-lg-3 modul-item">
+            @if($isLocked)
+            <div class="card-modul locked">
+            @else
+            <a href="/blok/{{ $m->id }}" class="card-modul">
+            @endif
+                <div class="card-modul-body">
+                    <div class="modul-icon {{ $isLocked ? 'locked-icon' : '' }}">
+                        <i class="fas {{ $isLocked ? 'fa-lock' : 'fa-box-archive' }}"></i>
+                    </div>
+                    <div class="modul-number">Modul {{ $loop->iteration }}</div>
+                    <div class="modul-name">{{ $m->nama_modul }}</div>
+                    @if($isLocked)
+                        <div class="lock-label">
+                            <i class="fas fa-lock"></i> Tersedia mulai {{ $lock['unlock_date'] }}
+                        </div>
+                    @elseif($m->deskripsi)
+                        <p class="text-muted mb-0" style="font-size:0.75rem; flex:1">{{ Str::limit($m->deskripsi, 60) }}</p>
+>>>>>>> 686ff83021b22abebb231249e1d8bddfbadec271
+                    @endif
+                    @if($lock['start_day'])
+                        <div class="schedule-badge">
+                            <i class="fas fa-calendar-alt me-1"></i>Hari {{ $lock['start_day'] }} — {{ $lock['start_day'] + ($lock['duration_days'] ?? 0) - 1 }}
+                            ({{ $lock['duration_days'] ?? '?' }} hari)
+                        </div>
                     @endif
                 </div>
                 <div class="modul-number">
@@ -376,6 +462,7 @@
                     @endphp
                     Modul {{ $modulNum }}
                 </div>
+<<<<<<< HEAD
                 <div class="modul-name">{{ $m->nama_modul }}</div>
 
                 @if($state === 'active')
@@ -437,6 +524,13 @@
                 </div>
             </div>
         @if($state === 'locked')
+=======
+            @if($isLocked)
+            </div>
+            @else
+            </a>
+            @endif
+>>>>>>> 686ff83021b22abebb231249e1d8bddfbadec271
         </div>
         @else
         </a>
