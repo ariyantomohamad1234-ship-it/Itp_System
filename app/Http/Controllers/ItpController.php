@@ -11,13 +11,9 @@ use App\Models\SubBlok;
 use App\Models\Itp;
 use App\Models\ItpData;
 use App\Models\User;
-<<<<<<< HEAD
 use App\Models\ActivityLog;
 use App\Services\NotificationService;
 use Barryvdh\DomPDF\Facade\Pdf;
-=======
-use App\Services\NotificationService;
->>>>>>> 686ff83021b22abebb231249e1d8bddfbadec271
 
 class ItpController extends Controller
 {
@@ -192,25 +188,17 @@ class ItpController extends Controller
             ];
         }
 
-<<<<<<< HEAD
         // === Calculate "Hari ke-N" ===
         $projectStart = $project->tanggal_mulai ? \Carbon\Carbon::parse($project->tanggal_mulai) : null;
         $dayN = $projectStart ? max(1, (int) $projectStart->diffInDays(now()) + 1) : null;
 
         // === 3-STATE MODULE LOCKING ===
         // States: 'locked' (belum waktunya), 'active' (sedang berlangsung), 'completed' (sudah selesai)
-=======
-        // Calculate module lock status and "Hari ke-N"
-        $projectStart = $project->tanggal_mulai ? \Carbon\Carbon::parse($project->tanggal_mulai) : null;
-        $dayN = $projectStart ? (int) $projectStart->diffInDays(now()) + 1 : null;
-
->>>>>>> 686ff83021b22abebb231249e1d8bddfbadec271
         $modulLock = [];
         foreach ($modul as $m) {
             $startDay = $m->start_day ?? null;
             $durationDays = $m->duration_days ?? null;
 
-<<<<<<< HEAD
             if ($projectStart && $startDay && $durationDays) {
                 $endDay = $startDay + $durationDays - 1;
 
@@ -258,22 +246,6 @@ class ItpController extends Controller
                     'unlock_date' => null,
                     'start_day' => $startDay,
                     'end_day' => null,
-=======
-            if ($projectStart && $startDay) {
-                $unlockDate = $projectStart->copy()->addDays($startDay - 1);
-                $isLocked = now()->lt($unlockDate);
-                $modulLock[$m->id] = [
-                    'locked' => $isLocked,
-                    'unlock_date' => $unlockDate->format('d M Y'),
-                    'start_day' => $startDay,
-                    'duration_days' => $durationDays,
-                ];
-            } else {
-                $modulLock[$m->id] = [
-                    'locked' => false,
-                    'unlock_date' => null,
-                    'start_day' => $startDay,
->>>>>>> 686ff83021b22abebb231249e1d8bddfbadec271
                     'duration_days' => $durationDays,
                 ];
             }
@@ -406,19 +378,8 @@ class ItpController extends Controller
             ];
         })->values();
 
-<<<<<<< HEAD
         // Visibility: everyone can see everyone's data (read-only for roles they can't ACC/Reject)
         $visibleRoles = ['yard', 'os', 'class', 'stat'];
-=======
-        // Visibility: which roles' data can this user see
-        $visibleRoles = match ($role) {
-            'os'    => ['yard', 'os'],
-            'class' => ['yard', 'os', 'class'],
-            'stat'  => ['yard', 'os', 'class', 'stat'],
-            'yard'  => ['yard'],
-            default => ['yard', 'os', 'class', 'stat'],
-        };
->>>>>>> 686ff83021b22abebb231249e1d8bddfbadec271
 
         return response()->json([
             'itp' => $itp,
@@ -497,11 +458,8 @@ class ItpController extends Controller
             // Don't fail the submission if notification fails
         }
 
-<<<<<<< HEAD
         ActivityLog::record('submit_itp', $msg, $itp);
 
-=======
->>>>>>> 686ff83021b22abebb231249e1d8bddfbadec271
         return response()->json(['success' => true, 'message' => $msg]);
     }
 
@@ -543,6 +501,7 @@ class ItpController extends Controller
         ]);
 
         // Send notifications
+        $itp = null;
         try {
             $itp = Itp::find($data->itp_id);
             $approver = User::find($user->id);
@@ -551,11 +510,8 @@ class ItpController extends Controller
             $notifService->notifyApproved($itp, $approver, $dataOwner);
         } catch (\Throwable $e) {}
 
-<<<<<<< HEAD
         ActivityLog::record('approve_itp', "ACC data ITP milik {$data->uploader->name} (Role: {$data->uploader->role})", $itp);
 
-=======
->>>>>>> 686ff83021b22abebb231249e1d8bddfbadec271
         return response()->json(['success' => true, 'message' => 'Data ITP berhasil di-ACC!']);
     }
 
@@ -591,15 +547,15 @@ class ItpController extends Controller
         ]);
 
         // Send rejection notification
+        $itp = null;
+        $dataOwner = $data->uploader;
         try {
             $itp = Itp::find($data->itp_id);
             $rejector = User::find($user->id);
-            $dataOwner = $data->uploader;
             $notifService = new NotificationService();
             $notifService->notifyRejected($itp, $rejector, $dataOwner, $request->note);
         } catch (\Throwable $e) {}
 
-<<<<<<< HEAD
         ActivityLog::record('reject_itp', "Reject data ITP milik {$dataOwner->name} dengan alasan: {$request->note}", $itp);
 
         return response()->json(['success' => true, 'message' => 'Data ITP ditolak dan dikembalikan untuk revisi.']);
@@ -625,8 +581,5 @@ class ItpController extends Controller
         $pdf = Pdf::loadView('reports.itp-certificate', compact('itpData', 'itp', 'project'));
         
         return $pdf->download("ITP_Certificate_{$itp->code}_{$itpData->id}.pdf");
-=======
-        return response()->json(['success' => true, 'message' => 'Data ITP ditolak dan dikembalikan untuk revisi.']);
->>>>>>> 686ff83021b22abebb231249e1d8bddfbadec271
     }
 }

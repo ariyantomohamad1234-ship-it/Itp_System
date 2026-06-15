@@ -41,13 +41,10 @@ class NotificationService
                 'related_project_id' => $projectId,
                 'sender_id' => $submitter->id,
             ]);
-<<<<<<< HEAD
 
             // SEND WA
             $waMessage = "*[ITP NOTIF]*\nData ITP Baru dari *{$submitter->name}* untuk kode *{$itp->code}*. Silakan cek di sistem.";
             WhatsAppService::sendMessage($user->phone, $waMessage);
-=======
->>>>>>> 686ff83021b22abebb231249e1d8bddfbadec271
         }
     }
 
@@ -68,13 +65,10 @@ class NotificationService
             'sender_id' => $approver->id,
         ]);
 
-<<<<<<< HEAD
         // SEND WA TO OWNER
         $waOwner = "*[ITP ACC]*\nData ITP *{$itp->code}* Anda telah di-ACC oleh *{$approver->name}*.";
         WhatsAppService::sendMessage($dataOwner->phone, $waOwner);
 
-=======
->>>>>>> 686ff83021b22abebb231249e1d8bddfbadec271
         // Notify next role up if applicable
         $nextRole = self::ROLE_ABOVE[$approver->role] ?? null;
         if (!$nextRole) return;
@@ -117,13 +111,10 @@ class NotificationService
             'related_project_id' => $projectId,
             'sender_id' => $rejector->id,
         ]);
-<<<<<<< HEAD
 
         // SEND WA
         $waReject = "*[ITP REVISI]*\nData ITP *{$itp->code}* Anda ditolak oleh *{$rejector->name}*.\nCatatan: \"{$note}\"";
         WhatsAppService::sendMessage($dataOwner->phone, $waReject);
-=======
->>>>>>> 686ff83021b22abebb231249e1d8bddfbadec271
     }
 
     private function getProjectId(Itp $itp): ?int

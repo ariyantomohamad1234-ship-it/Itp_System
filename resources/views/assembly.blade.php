@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 @section('title', 'Assembly - ' . $subblok->nama_sub_blok)
 @section('page-title', 'Kode Inspeksi')
 
@@ -441,7 +441,7 @@ function openItpModal(itpId) {
             const canAccRole = res.can_acc_role;
             const visibleRoles = res.visible_roles || [];
 
-            document.getElementById('modalTitle').innerHTML = `<i class="fas fa-file-alt me-2 text-primary"></i>${itp.code} — ${itp.item}`;
+            document.getElementById('modalTitle').innerHTML = `<i class="fas fa-file-alt me-2 text-primary"></i>${itp.code} â€” ${itp.item}`;
 
             let html = '<div class="mb-3"><div class="fw-bold mb-2" style="font-size:0.8rem"><i class="fas fa-users me-1 text-primary"></i>Status Semua Role</div>';
             html += '<div class="status-grid">';
@@ -460,7 +460,7 @@ function openItpModal(itpId) {
 
                 let statusHtml;
                 if (!isRequired) {
-                    statusHtml = `<span class="text-muted" style="font-size:0.7rem">${rVal === 'NA' ? 'N/A' : '—'}</span>`;
+                    statusHtml = `<span class="text-muted" style="font-size:0.7rem">${rVal === 'NA' ? 'N/A' : 'â€”'}</span>`;
                 } else if (isApproved) {
                     statusHtml = '<span class="text-primary" style="font-size:0.7rem"><i class="fas fa-shield-alt me-1"></i>ACC</span>';
                 } else if (isRejected) {
@@ -497,39 +497,6 @@ function openItpModal(itpId) {
             // === ACC/REJECT SUBORDINATE DATA (hierarchy-based) ===
             const subData = allData.filter(d => d.can_acc || d.can_reject);
             if (subData.length > 0) {
-<<<<<<< HEAD
-=======
-                html += '<hr style="border-color:#f1f5f9">';
-                html += '<div class="fw-bold mb-2" style="font-size:0.8rem"><i class="fas fa-gavel me-1 text-success"></i>Review Data Bawahan</div>';
-                subData.forEach(d => {
-                    html += `<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:0.75rem;padding:0.75rem;margin-bottom:0.5rem">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="fw-bold" style="font-size:0.8rem"><i class="fas fa-user me-1"></i>${d.name} (${roleLabels[d.role] || d.role})</span>
-                            <span class="badge bg-warning text-dark" style="font-size:0.6rem">Menunggu Review</span>
-                        </div>
-                        ${d.photo ? `<img src="/storage/${d.photo}" style="width:100%;max-height:150px;object-fit:contain;border-radius:0.5rem;margin-bottom:0.5rem">` : ''}
-                        <div style="font-size:0.8rem;margin-bottom:0.5rem">${d.keterangan || '-'}</div>
-                        <div class="d-flex gap-2">
-                            <button onclick="accItpData(${d.id})" class="btn-acc flex-fill" style="padding:0.4rem;font-size:0.8rem" id="accBtn-${d.id}">
-                                <i class="fas fa-check-circle"></i> ACC
-                            </button>
-                            <button onclick="showRejectForm(${d.id})" class="btn btn-outline-danger flex-fill" style="padding:0.4rem;font-size:0.8rem;border-radius:0.625rem;font-weight:700">
-                                <i class="fas fa-times-circle"></i> Reject
-                            </button>
-                        </div>
-                        <div id="rejectForm-${d.id}" style="display:none;margin-top:0.5rem">
-                            <textarea id="rejectNote-${d.id}" class="form-control mb-2" rows="2" placeholder="Alasan reject (wajib diisi)..." style="font-size:0.8rem"></textarea>
-                            <button onclick="rejectItpData(${d.id})" class="btn btn-danger w-100" style="font-size:0.8rem;font-weight:700;border-radius:0.625rem" id="rejectBtn-${d.id}">
-                                <i class="fas fa-paper-plane me-1"></i>Kirim Reject
-                            </button>
-                        </div>
-                    </div>`;
-                });
-            }
-
-            // === MY SUBMIT SECTION ===
-            if (canSubmit) {
->>>>>>> 686ff83021b22abebb231249e1d8bddfbadec271
                 html += '<hr style="border-color:#f1f5f9">';
                 html += '<div class="fw-bold mb-2" style="font-size:0.8rem"><i class="fas fa-gavel me-1 text-success"></i>Review Data Bawahan</div>';
                 subData.forEach(d => {
@@ -719,8 +686,6 @@ function accItpData(dataId) {
         }
     })
     .catch(() => { alert('Terjadi kesalahan'); if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-check-circle"></i> ACC'; } });
-<<<<<<< HEAD
-=======
 }
 
 function showRejectForm(dataId) {
@@ -756,37 +721,6 @@ function rejectItpData(dataId) {
 function toggleRoleDetail(role) {
     const el = document.getElementById('detail-' + role);
     if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
->>>>>>> 686ff83021b22abebb231249e1d8bddfbadec271
-}
-
-function showRejectForm(dataId) {
-    const form = document.getElementById('rejectForm-' + dataId);
-    if (form) form.style.display = form.style.display === 'none' ? 'block' : 'none';
-}
-
-function rejectItpData(dataId) {
-    const note = document.getElementById('rejectNote-' + dataId)?.value?.trim();
-    if (!note || note.length < 3) { alert('Alasan reject wajib diisi (minimal 3 karakter)'); return; }
-
-    const btn = document.getElementById('rejectBtn-' + dataId);
-    if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Memproses...'; }
-
-    fetch(`/itp-data/${dataId}/reject`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken },
-        body: JSON.stringify({ note: note }),
-    })
-    .then(r => r.json())
-    .then(res => {
-        if (res.success) {
-            if (btn) btn.innerHTML = '<i class="fas fa-check me-1"></i>Ditolak!';
-            setTimeout(() => { closeModal(); location.reload(); }, 800);
-        } else {
-            alert(res.message || 'Gagal reject');
-            if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-paper-plane me-1"></i>Kirim Reject'; }
-        }
-    })
-    .catch(() => { alert('Terjadi kesalahan'); if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-paper-plane me-1"></i>Kirim Reject'; } });
 }
 
 // Live Search Filter

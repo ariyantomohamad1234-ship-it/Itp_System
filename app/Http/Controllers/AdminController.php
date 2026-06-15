@@ -13,10 +13,7 @@ use App\Models\SubBlok;
 use App\Models\Itp;
 use App\Models\User;
 use App\Models\AssemblyCode;
-<<<<<<< HEAD
 use App\Models\ActivityLog;
-=======
->>>>>>> 686ff83021b22abebb231249e1d8bddfbadec271
 use App\Services\ProjectTemplateService;
 
 class AdminController extends Controller
@@ -177,7 +174,6 @@ class AdminController extends Controller
             'template_id' => 'nullable|exists:project_templates,id',
         ]);
 
-<<<<<<< HEAD
         // Check uniqueness manually to provide better feedback
         $existingProject = DB::table('projects')->where('kode_project', $request->kode_project)->first();
         if ($existingProject) {
@@ -196,8 +192,6 @@ class AdminController extends Controller
             return back()->withErrors(['kode_project' => 'Kode project sudah digunakan.'])->withInput();
         }
 
-=======
->>>>>>> 686ff83021b22abebb231249e1d8bddfbadec271
         $projectData = $request->only('nama_project', 'kode_project', 'deskripsi', 'tanggal_kontrak', 'tanggal_mulai', 'deadline');
 
         // Mode template: clone dari template
@@ -206,7 +200,6 @@ class AdminController extends Controller
             $service = new ProjectTemplateService();
             $project = $service->cloneTemplate($template, $projectData);
 
-<<<<<<< HEAD
             // Auto-assign if admin_galangan
             $userSession = session('user');
             $currentUser = User::find($userSession->id);
@@ -219,11 +212,9 @@ class AdminController extends Controller
                 ]);
             }
 
-=======
->>>>>>> 686ff83021b22abebb231249e1d8bddfbadec271
             $stats = [
                 'moduls' => $project->moduls()->count(),
-                'bloks'  => \App\Models\Blok::whereIn('modul_id', $project->moduls()->pluck('id'))->count(),
+                'bloks'  => Blok::whereIn('modul_id', $project->moduls()->pluck('id'))->count(),
             ];
 
             return redirect('/admin/dashboard')->with('success',
@@ -232,11 +223,7 @@ class AdminController extends Controller
         }
 
         // Mode custom/manual: buat project kosong
-<<<<<<< HEAD
         $projectId = DB::table('projects')->insertGetId([
-=======
-        DB::table('projects')->insert([
->>>>>>> 686ff83021b22abebb231249e1d8bddfbadec271
             'nama_project' => $projectData['nama_project'],
             'kode_project' => $projectData['kode_project'],
             'deskripsi' => $projectData['deskripsi'],
@@ -248,7 +235,6 @@ class AdminController extends Controller
             'updated_at' => now(),
         ]);
 
-<<<<<<< HEAD
         $project = Project::find($projectId);
         
         // Auto-assign if admin_galangan
@@ -265,8 +251,6 @@ class AdminController extends Controller
 
         ActivityLog::record('create_project', "Membuat proyek baru: {$project->nama_project}", $project);
 
-=======
->>>>>>> 686ff83021b22abebb231249e1d8bddfbadec271
         return redirect('/admin/dashboard')->with('success', 'Project berhasil dibuat (mode manual)!');
     }
 
@@ -359,11 +343,7 @@ class AdminController extends Controller
             $assemblyCodes = collect();
         }
 
-<<<<<<< HEAD
         return view('admin.manage-project', compact('project', 'moduls', 'allUsers', 'assemblyCodes', 'currentUser'));
-=======
-        return view('admin.manage-project', compact('project', 'moduls', 'allUsers', 'assemblyCodes'));
->>>>>>> 686ff83021b22abebb231249e1d8bddfbadec271
     }
 
     public function storeModul(Request $request)
@@ -466,13 +446,10 @@ class AdminController extends Controller
 
         return back()->with('success', 'Jadwal modul berhasil diperbarui!');
     }
-<<<<<<< HEAD
 
     public function showLogs()
     {
         $logs = ActivityLog::with('user')->orderBy('created_at', 'desc')->paginate(50);
         return view('admin.logs', compact('logs'));
     }
-=======
->>>>>>> 686ff83021b22abebb231249e1d8bddfbadec271
 }

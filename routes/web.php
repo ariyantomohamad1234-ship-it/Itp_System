@@ -15,12 +15,9 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::middleware(AuthMiddleware::class)->group(function () {
     Route::get('/logout', [AuthController::class, 'logout']);
 
-<<<<<<< HEAD
     // === PDF REPORTING (Phase 3) ===
     Route::get('/itp-data/{id}/export', [ItpController::class, 'exportPdf']);
 
-=======
->>>>>>> 686ff83021b22abebb231249e1d8bddfbadec271
     // === NOTIFICATIONS ===
     Route::get('/notifications', [NotificationController::class, 'index']);
     Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount']);
@@ -48,10 +45,7 @@ Route::middleware(AuthMiddleware::class)->group(function () {
         Route::delete('/sub-bloks/{id}', [AdminController::class, 'deleteSubBlok']);
         Route::delete('/itps/{id}', [AdminController::class, 'deleteItp']);
         Route::post('/moduls/{id}/schedule', [AdminController::class, 'updateModulSchedule']);
-<<<<<<< HEAD
         Route::get('/logs', [AdminController::class, 'showLogs']);
-=======
->>>>>>> 686ff83021b22abebb231249e1d8bddfbadec271
     });
 
     // === NON-ADMIN ===
